@@ -1,0 +1,17 @@
+---
+applications:
+- name: das
+  memory: 1024m
+  instances: 1
+  host: das
+  path: target/data-acquisition-${version}.jar
+  services:
+    - downloader
+    - metadataparser
+    - user-management
+    - kafka
+    - zookeeper
+    - requests-store
+    - sso
+  env:
+    SPRING_PROFILES_ACTIVE: "cloud"

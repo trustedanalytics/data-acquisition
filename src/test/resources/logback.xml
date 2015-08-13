@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+     
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+		<resetJUL>true</resetJUL>
+	</contextListener>
+
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread{10}][%-5level] %logger{15} - %msg%n%rEx</pattern>
+		</encoder>
+	</appender>
+	
+ 	<root>
+		<level value="ERROR" />
+ 	</root>
+ 	
+ 	<logger name="org.trustedanalytics" level="DEBUG"/>
+ 	
+</configuration>

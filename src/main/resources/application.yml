@@ -1,0 +1,51 @@
+server:
+  port: 9997
+topic:
+  toRequestsParser: toRequestsParser
+  toDownloader: toDownloader
+  toMetadataParser: toMetadataParser
+kafka:
+  clusterType: distributed
+  producer:
+    serializer.class: org.trustedanalytics.das.kafka.JsonEncoder
+    key.serializer.class: kafka.serializer.StringEncoder
+    metadata.broker.list: ${vcap.services.kafka.credentials.uri}
+
+  consumer:  
+    group.id: default_group
+    auto.commit.interval.ms: 1000
+    auto.offset.reset: smallest 
+    #watch for chroot (kafka)
+    zookeeper.connect: "${vcap.services.zookeeper.credentials.uri}/kafka"
+    zookeeper.chroot: kafka
+    zookeeper.session.timeout.ms: 400
+    zookeeper.sync.time.ms: 200
+
+services:
+  downloader: "${vcap.services.downloader.credentials.url:http://localhost:8090}"
+  metadataparser: "${vcap.services.metadataparser.credentials.url:http://localhost:8900}"
+  user-management: "${vcap.services.user-management.credentials.host:http://localhost:9998}"
+  
+spring.profiles.active: inmemory,local
+
+callback:
+  url: "http://${vcap.application.application_uris[0]:localhost:8080}/rest/das/callbacks/{app}/{requestId}"
+
+security:
+  ignored: /open,/sdoc.jsp,/*.js,/api-docs,/api-docs/default/*,/images/*,/lib/*,/css/*
+
+spring.oauth2.resource:
+  id: cloud_controller
+  jwt:
+    keyUri: ${vcap.services.sso.credentials.tokenKey}
+
+
+logging:
+  level:
+    org.springframework: INFO
+    org.trustedanalytics: INFO
+
+cf:
+  resource: ${vcap.services.sso.credentials.apiEndpoint}
+  uaa: ${vcap.services.sso.credentials.uaaUri}
+
