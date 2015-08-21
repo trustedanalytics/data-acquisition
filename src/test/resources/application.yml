@@ -37,8 +37,7 @@ security:
 spring.oauth2.resource:
   id: cloud_controller
   jwt:
-    keyUri: http://uaa.domain.com/token_key
-
+    keyValue: FAKE_KEY
 
 logging:
   level:
