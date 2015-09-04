@@ -15,14 +15,16 @@
  */
 package org.trustedanalytics.das;
 
-import com.mangofactory.swagger.plugin.EnableSwagger;
+import org.trustedanalytics.utils.errorhandling.EnableRestErrorHandling;
 
+import com.mangofactory.swagger.plugin.EnableSwagger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.security.oauth2.resource.EnableOAuth2Resource;
 
 @EnableSwagger
 @EnableOAuth2Resource
+@EnableRestErrorHandling
 @SpringBootApplication
 public class Main {
     public static void main(String[] args) {
