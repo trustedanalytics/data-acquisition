@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.das.dataflow.FlowManager;
 import org.trustedanalytics.das.helper.RequestIdGenerator;
@@ -35,9 +36,9 @@ import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RestDataAquisitionServiceTest {
@@ -58,6 +59,9 @@ public class RestDataAquisitionServiceTest {
     private HttpServletRequest context;
 
     @Mock
+    private Function<String, FlowHandler> flowDispatcher;
+
+    @Mock
     PermissionVerifier permissionVerifier;
 
     @InjectMocks
@@ -65,12 +69,14 @@ public class RestDataAquisitionServiceTest {
 
     @Test
     public void testAdd() throws Exception {
+
         String testOrgUUID = UUID.randomUUID().toString();
         Request request = getTestRequest();
         request.setToken("2asdas13");
         request.setOrgUUID(testOrgUUID);
         when(tokenRetriever.getAuthToken(any(Authentication.class))).thenReturn("1231aessa");
         when(idGenerator.getId(request.getSource())).thenReturn("2");
+        when(flowDispatcher.apply("http")).thenReturn(new RequestFlowForNewFile());
 
         service.addRequest(request, context);
 
@@ -80,12 +86,31 @@ public class RestDataAquisitionServiceTest {
         verify(requestStore).put(expected);
     }
 
+    @Test
+    public void testAdd_ForExistingFile() throws Exception {
+        String testOrgUUID = UUID.randomUUID().toString();
+        Request request = getTestRequestWithHdfsFile();
+        request.setToken("2asdas13");
+        request.setOrgUUID(testOrgUUID);
+        when(tokenRetriever.getAuthToken(any(Authentication.class))).thenReturn("1231aessa");
+        when(idGenerator.getId(request.getSource())).thenReturn("2");
+        when(flowDispatcher.apply("hdfs")).thenReturn(new RequestFlowForExistingFile());
+
+        service.addRequest(request, context);
+
+        Request expected = getTestRequestWithHdfsFile();
+        expected.setState(Request.State.VALIDATED);
+        expected.setId("2");
+        expected.setOrgUUID(testOrgUUID);
+        verify(requestStore).put(expected);
+    }
+
     private Request getTestRequest() {
-        try {
-            return Request.newInstance("org", 1, "1", new URI("file:///foo/bar.txt"));
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        return Request.newInstance("org", 1, "1", URI.create("http:///foo/bar.txt"));
+    }
+
+    private Request getTestRequestWithHdfsFile() {
+        return Request.newInstance("org", 1, "1", URI.create("hdfs://nameservice1/org/intel/hdfsbroker/userspace/c5378e1f-a35b-4b8b-b800/b519d8c7-2fc0-4842-920b/000000_1"));
     }
 
     @Test

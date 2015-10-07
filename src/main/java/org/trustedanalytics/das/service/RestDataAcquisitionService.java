@@ -18,6 +18,8 @@ package org.trustedanalytics.das.service;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.trustedanalytics.das.security.permissions.PermissionVerifier;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.das.dataflow.FlowManager;
@@ -36,6 +38,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -49,6 +52,7 @@ public class RestDataAcquisitionService {
     private final RequestIdGenerator requestIdGenerator;
     private final AuthTokenRetriever tokenRetriever;
     private final PermissionVerifier permissionVerifier;
+    private final Function<String, FlowHandler> flowDispatcher;
 
     @Autowired
     public RestDataAcquisitionService(
@@ -56,12 +60,14 @@ public class RestDataAcquisitionService {
             RequestStore requestStore,
             RequestIdGenerator requestIdGenerator,
             AuthTokenRetriever tokenRetriever,
-            PermissionVerifier permissionVerifier) {
+            PermissionVerifier permissionVerifier,
+            Function<String, FlowHandler> flowDispatcher) {
         this.flowManager = flowManager;
         this.requestStore = requestStore;
         this.requestIdGenerator = requestIdGenerator;
         this.tokenRetriever = tokenRetriever;
         this.permissionVerifier = permissionVerifier;
+        this.flowDispatcher = flowDispatcher;
     }
 
     @RequestMapping(method = POST)
@@ -77,8 +83,9 @@ public class RestDataAcquisitionService {
         request.setToken(token);
         LOGGER.debug("add({})", request);
         request.setId(requestIdGenerator.getId(request.getSource()));
-        flowManager.newRequest(request);
-        requestStore.put(request);
+        flowDispatcher
+            .apply(request.getSource().getScheme())
+            .process(request, flowManager, requestStore);
         return excludeToken(request);
     }
 

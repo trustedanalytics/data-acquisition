@@ -113,7 +113,7 @@ public class DASIT {
 
         ResponseEntity<Request> response =
             testRestTemplate.postForEntity(effectiveBaseUrl,
-                Request.newInstance(org.getGuid().toString(), 0, null, null),
+                Request.newInstance(org.getGuid().toString(), 0, null, URI.create("http://foo/bar.txt")),
                 Request.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.ACCEPTED));

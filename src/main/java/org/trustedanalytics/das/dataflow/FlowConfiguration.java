@@ -15,9 +15,15 @@
  */
 package org.trustedanalytics.das.dataflow;
 
+import com.google.common.collect.ImmutableSet;
+import org.trustedanalytics.das.service.FlowHandler;
+import org.trustedanalytics.das.service.RequestFlowForExistingFile;
+import org.trustedanalytics.das.service.RequestFlowForNewFile;
 import org.trustedanalytics.das.store.BlockingRequestQueue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.function.Function;
 
 @Configuration
 public class FlowConfiguration {
@@ -25,5 +31,26 @@ public class FlowConfiguration {
     @Bean
     public FlowManager flowManager(BlockingRequestQueue toRequestsParser, BlockingRequestQueue toDownloader, BlockingRequestQueue toMetadataParser) {
         return new FlowManager(toRequestsParser, toDownloader, toMetadataParser);
+    }
+
+    @Bean
+    public FlowHandler requestFlowForNewFile() {
+        return new RequestFlowForNewFile();
+    }
+
+    @Bean
+    public FlowHandler requestFlowForExistingFile() {
+        return new RequestFlowForExistingFile();
+    }
+
+    @Bean
+    public Function<String, FlowHandler> flowHandler() {
+       return scheme -> {
+           if(ImmutableSet.of("http", "https").contains(scheme)) {
+                return requestFlowForNewFile();
+           } else {
+               return requestFlowForExistingFile();
+           }
+       };
     }
 }
