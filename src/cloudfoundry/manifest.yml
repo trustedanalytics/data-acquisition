@@ -11,7 +11,7 @@ applications:
     - user-management
     - kafka
     - zookeeper
-    - request-store
+    - requests-store
     - sso
   env:
     SPRING_PROFILES_ACTIVE: "cloud"
