@@ -17,8 +17,8 @@ package org.trustedanalytics.das.parser;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import org.springframework.beans.BeanUtils;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -30,6 +30,7 @@ import java.util.function.Consumer;
  * Information about submitted request : status etc.
  */
 public class Request {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Request.class);
 
     public enum State {
         NEW, VALIDATED, DOWNLOADED, FINISHED, ERROR
@@ -155,7 +156,17 @@ public class Request {
 
     public static Request newInstance(Request request) {
         final Request copy = new Request();
-        BeanUtils.copyProperties(request, copy);
+        copy.category = request.category;
+        copy.id = request.id;
+        copy.idInObjectStore = request.idInObjectStore;
+        copy.orgUUID = request.orgUUID;
+        copy.publicRequest = request.publicRequest;
+        copy.source = URI.create(request.source.toString());
+        copy.state = request.state;
+        copy.title = request.title;
+        copy.token = request.token;
+        copy.userId = request.userId;
+        copy.timestamps = new HashMap<State,Long>(request.timestamps);
         return copy;
     }
 
@@ -201,6 +212,8 @@ public class Request {
         builder.append(title);
         builder.append(", category=");
         builder.append(category);
+        builder.append(", timestamps=");
+        builder.append(timestamps);
         builder.append("]");
         return builder.toString();
     }

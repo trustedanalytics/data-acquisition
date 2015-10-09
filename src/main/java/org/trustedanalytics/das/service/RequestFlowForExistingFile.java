@@ -22,6 +22,7 @@ import org.trustedanalytics.das.store.RequestStore;
 public class RequestFlowForExistingFile implements FlowHandler {
 
     public void process(Request request, FlowManager flowManager, RequestStore requestStore){
+        request.changeState(Request.State.NEW);
         request.changeState(Request.State.VALIDATED);
 
         // from now on this should be treated like any other download
