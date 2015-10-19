@@ -15,21 +15,53 @@
  */
 package org.trustedanalytics.das.parser;
 
+import static org.junit.Assert.assertEquals;
 import static org.trustedanalytics.das.parser.Request.State.NEW;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.assertThat;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.UUID;
 
 import org.junit.Test;
 
 public class RequestTest {
 
-    @Test public void setTimestamp_getTimestamps() throws URISyntaxException {
+    private Request createTestRequest() throws URISyntaxException {
+        Request request = new Request();
+        request.setCategory("test category");
+        request.setId(UUID.randomUUID().toString());
+        request.setOrgUUID(UUID.randomUUID().toString());
+        request.setSource(new URI("http://example.com"));
+        request.setState(Request.State.DOWNLOADED);
+        request.setTimestamp(Request.State.DOWNLOADED);
+        request.setTitle("test title");
+        request.setUserId(12);
+        return request;
+    }
+
+
+    @Test
+    public void setTimestamp_getTimestamps() throws URISyntaxException {
         Request request = Request.newInstance(0, new URI("http://example.com"));
         request.setTimestamp(NEW);
         
         assertThat(request.getTimestamps(), hasKey(Request.State.NEW));
+    }
+
+    @Test
+    public void newInstance_testCopy() throws URISyntaxException {
+        Request request = createTestRequest();
+        Request testRequest = Request.newInstance(request);
+        assertEquals(request, testRequest);
+    }
+
+    @Test
+    public void newInstance_testCopyEmptySource() throws URISyntaxException {
+        Request request = createTestRequest();
+        request.setSource(null);
+        Request testRequest = Request.newInstance(request);
+        assertEquals(request, testRequest);
     }
 }

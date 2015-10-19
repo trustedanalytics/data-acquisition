@@ -17,6 +17,8 @@ package org.trustedanalytics.das.parser;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.URI;
@@ -36,117 +38,43 @@ public class Request {
         NEW, VALIDATED, DOWNLOADED, FINISHED, ERROR
     }
 
-
+    @Getter @Setter
     private String id;
 
+    @Getter @Setter
     private int userId;
 
+    @Getter @Setter
     private URI source;
 
+    @Getter @Setter
     private State state;
 
+    @Getter @Setter
     private String idInObjectStore;
 
+    @Getter @Setter
     private String category;
 
+    @Getter @Setter
     private String title;
 
+    @Getter
     private Map<State, Long> timestamps = new HashMap<>();
 
+    @Getter @Setter
     private String orgUUID;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Getter @Setter
     private String token;
 
+    @Getter @Setter
     private boolean publicRequest;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
-    public URI getSource() {
-        return source;
-    }
-
-    public void setSource(URI source) {
-        this.source = source;
-    }
-
-    public State getState() {
-        return state;
-    }
-
-    public void setState(State state) {
-        this.state = state;
-    }
-
-    public String getIdInObjectStore() {
-        return idInObjectStore;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public boolean isPublicRequest() {
-        return publicRequest;
-    }
-
-    public void setIsPublicRequest(boolean isPublic) {
-        this.publicRequest = isPublic;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setIdInObjectStore(String idInObjectStore) {
-        this.idInObjectStore = idInObjectStore;
-    }
-
-    public Map<State, Long> getTimestamps() {
-        return timestamps;
-    }
 
     public void setTimestamp(State state) {
         long epochSecond = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
         timestamps.put(state, epochSecond);
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getOrgUUID() {
-        return orgUUID;
-    }
-
-    public void setOrgUUID(String orgUUID) {
-        this.orgUUID = orgUUID;
     }
 
     public void changeState(State state) {
@@ -161,12 +89,17 @@ public class Request {
         copy.idInObjectStore = request.idInObjectStore;
         copy.orgUUID = request.orgUUID;
         copy.publicRequest = request.publicRequest;
-        copy.source = URI.create(request.source.toString());
+        if(request.source == null) {
+            LOGGER.error("Original request have empty source: " + request);
+        }
+        else {
+            copy.source = URI.create(request.source.toString());
+        }
         copy.state = request.state;
         copy.title = request.title;
         copy.token = request.token;
         copy.userId = request.userId;
-        copy.timestamps = new HashMap<State,Long>(request.timestamps);
+        copy.timestamps = new HashMap<State, Long>(request.timestamps);
         return copy;
     }
 
