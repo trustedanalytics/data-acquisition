@@ -20,6 +20,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.trustedanalytics.das.security.permissions.PermissionVerifier;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.das.dataflow.FlowManager;
@@ -40,6 +41,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(value="rest/das/requests")
@@ -83,8 +85,14 @@ public class RestDataAcquisitionService {
         request.setToken(token);
         LOGGER.debug("add({})", request);
         request.setId(requestIdGenerator.getId(request.getSource()));
+        String source = request.getSource();
+        if(StringUtils.isBlank(source)) {
+            throw new BadRequestException("Missing field value: source");
+        }
+
+
         flowDispatcher
-            .apply(request.getSource().getScheme())
+            .apply(source.split(":")[0])
             .process(request, flowManager, requestStore);
         return excludeToken(request);
     }
@@ -134,7 +142,14 @@ public class RestDataAcquisitionService {
         requestStore.delete(id);
         return DefaultResponse.newInstance("OK");
     }
-    
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(NOT_FOUND)
+    public void badRequestHandler(BadRequestException exception, HttpServletResponse response ) throws IOException {
+        LOGGER.error("Empty \"source\" on reqest");
+        response.sendError(400, exception.getMessage());
+    }
+
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseStatus(NOT_FOUND)
     public void noSuchElementExceptionHandler() {

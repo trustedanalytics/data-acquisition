@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.URI;
@@ -45,7 +46,7 @@ public class Request {
     private int userId;
 
     @Getter @Setter
-    private URI source;
+    private String source;
 
     @Getter @Setter
     private State state;
@@ -89,11 +90,11 @@ public class Request {
         copy.idInObjectStore = request.idInObjectStore;
         copy.orgUUID = request.orgUUID;
         copy.publicRequest = request.publicRequest;
-        if(request.source == null) {
-            LOGGER.error("Original request have empty source: " + request);
+        if(StringUtils.isNotBlank(request.source)) {
+            copy.source = request.source;
         }
         else {
-            copy.source = URI.create(request.source.toString());
+            LOGGER.error("Original request have empty source: " + request);
         }
         copy.state = request.state;
         copy.title = request.title;
@@ -109,7 +110,7 @@ public class Request {
         return copy;
     }
 
-    public static Request newInstance(int userId, URI resource) {
+    public static Request newInstance(int userId, String resource) {
         Request request = new Request();
         request.userId = userId;
         request.source = resource;
@@ -117,13 +118,13 @@ public class Request {
         return request;
     }
 
-    public static Request newInstance(int userId, String requestId, URI resource) {
+    public static Request newInstance(int userId, String requestId, String resource) {
         Request request = newInstance(userId, resource);
         request.id = requestId;
         return request;
     }
 
-    public static Request newInstance(String orgUUID, int userId, String requestId, URI resource) {
+    public static Request newInstance(String orgUUID, int userId, String requestId, String resource) {
         Request request = newInstance(userId, requestId, resource);
         request.setOrgUUID(orgUUID);
         return request;

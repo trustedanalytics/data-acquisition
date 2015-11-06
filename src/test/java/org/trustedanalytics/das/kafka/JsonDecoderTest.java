@@ -35,7 +35,7 @@ public class JsonDecoderTest {
         Request request =
                 jsonDecoder.fromBytes("{'userId':1,'source':'http://junit.org','state':'NEW'}"
                         .replaceAll("'", "\"").getBytes());
-        assertThat(request, equalTo(Request.newInstance(1, new URI("http://junit.org"))));
+        assertThat(request, equalTo(Request.newInstance(1, "http://junit.org")));
     }
 
 }

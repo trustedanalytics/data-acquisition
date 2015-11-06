@@ -59,7 +59,7 @@ public class RestDownloaderClientTest {
     public void download_test_success() throws InterruptedException {
         Request request = new Request();
         when(client.download(request)).thenReturn(new DownloadStatus());
-        when(toDownload.take()).thenReturn(request, null);
+        when(toDownload.take()).thenReturn(request);
 
         serviceManager.startAsync();
         verify(toDownload, timeout(1000).atLeastOnce()).take();
@@ -71,7 +71,7 @@ public class RestDownloaderClientTest {
     public void download_downloader_unavailable_failover() throws InterruptedException, URISyntaxException {
         Request request = new Request();
         when(client.download(request)).thenThrow(new RestClientException(""));
-        when(toDownload.take()).thenReturn(request, null);
+        when(toDownload.take()).thenReturn(request);
 
         serviceManager.startAsync();
         verify(toDownload, timeout(1000).atLeastOnce()).take();

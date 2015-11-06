@@ -24,7 +24,7 @@ import java.util.UUID;
 public class RandomUUIDRequestIdGenerator implements RequestIdGenerator {
 
     @Override
-    public String getId(URI uri) {
+    public String getId(String uri) {
         return UUID.randomUUID().toString();
     }
 }

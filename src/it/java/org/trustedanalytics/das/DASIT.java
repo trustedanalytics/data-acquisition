@@ -113,7 +113,7 @@ public class DASIT {
 
         ResponseEntity<Request> response =
             testRestTemplate.postForEntity(effectiveBaseUrl,
-                Request.newInstance(org.getGuid().toString(), 0, null, URI.create("http://foo/bar.txt")),
+                Request.newInstance(org.getGuid().toString(), 0, null, "http://foo/bar.txt"),
                 Request.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.ACCEPTED));
@@ -129,6 +129,25 @@ public class DASIT {
         //FIXME: verify the file content and the metadata are stored.
     }
 
+
+    @Test
+    public void postRequest_emptySource_shouldREturn400()
+            throws InterruptedException, IOException, ServletException {
+        when(tokenRetriever.getAuthToken(any(Authentication.class))).thenReturn(TOKEN);
+        CcOrg org = new CcOrg(UUID.fromString("11111111-2222-3333-4444-555555555555"), "fakeName");
+        CcOrgPermission permission = new CcOrgPermission();
+        permission.setOrganization(org);
+        prepareAccessibleOrgList(permission);
+
+        ResponseEntity<String> response =
+                testRestTemplate.postForEntity(effectiveBaseUrl,
+                        Request.newInstance(org.getGuid().toString(), 0, null, ""),
+                        String.class);
+
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.BAD_REQUEST));
+
+    }
+
     @Test
     public void postRequest_authorizationFails_shouldReturn403()
         throws URISyntaxException, InterruptedException, IOException, ServletException {
@@ -139,7 +158,7 @@ public class DASIT {
         ResponseEntity<String> response =
             testRestTemplate.postForEntity(
                 effectiveBaseUrl,
-                Request.newInstance(testOrgUUID, 0, null, new URI("source_url")),
+                Request.newInstance(testOrgUUID, 0, null, "source_url"),
                 String.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.FORBIDDEN));
@@ -158,7 +177,7 @@ public class DASIT {
         ResponseEntity<String> response =
                 testRestTemplate.postForEntity(
                         effectiveBaseUrl,
-                        Request.newInstance(testOrgUUID, 0, null, new URI("source_url")),
+                        Request.newInstance(testOrgUUID, 0, null, "source_url"),
                         String.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.UNAUTHORIZED));

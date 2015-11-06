@@ -41,7 +41,7 @@ public class BlockingMemoryMultiTopicQueueTest {
     public void testOffer() throws Exception {
         BlockingRequestQueue queue = new BlockingMemoryMultiTopicRequestQueue();
 
-        queue.offer(Request.newInstance(1, "request#1", new URI("file:///foo/bar")));
+        queue.offer(Request.newInstance(1, "request#1", "file:///foo/bar"));
         Request request = queue.take();
         assertThat(request.getId(), equalTo("request#1"));
     }
@@ -51,8 +51,8 @@ public class BlockingMemoryMultiTopicQueueTest {
         BlockingRequestQueue topic1 = new BlockingMemoryMultiTopicRequestQueue();
         BlockingRequestQueue topic2 = new BlockingMemoryMultiTopicRequestQueue();
 
-        topic1.offer(Request.newInstance(1, "request#1", new URI("file:///foo/bar")));
-        topic2.offer(Request.newInstance(1, "request#2", new URI("file:///foo/bar")));
+        topic1.offer(Request.newInstance(1, "request#1", "file:///foo/bar"));
+        topic2.offer(Request.newInstance(1, "request#2", "file:///foo/bar"));
 
         assertThat(topic1.take().getId(), equalTo("request#1"));
         assertThat(topic2.take().getId(), equalTo("request#2"));

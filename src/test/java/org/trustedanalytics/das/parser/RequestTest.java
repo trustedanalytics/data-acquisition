@@ -33,7 +33,7 @@ public class RequestTest {
         request.setCategory("test category");
         request.setId(UUID.randomUUID().toString());
         request.setOrgUUID(UUID.randomUUID().toString());
-        request.setSource(new URI("http://example.com"));
+        request.setSource("http://example.com");
         request.setState(Request.State.DOWNLOADED);
         request.setTimestamp(Request.State.DOWNLOADED);
         request.setTitle("test title");
@@ -44,7 +44,7 @@ public class RequestTest {
 
     @Test
     public void setTimestamp_getTimestamps() throws URISyntaxException {
-        Request request = Request.newInstance(0, new URI("http://example.com"));
+        Request request = Request.newInstance(0, "http://example.com");
         request.setTimestamp(NEW);
         
         assertThat(request.getTimestamps(), hasKey(Request.State.NEW));

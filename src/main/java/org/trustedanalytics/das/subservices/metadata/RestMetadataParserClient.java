@@ -19,7 +19,6 @@ import org.trustedanalytics.das.helper.OAuthAuthenticator;
 import org.trustedanalytics.das.helper.RestTokenAuthenticator;
 import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.subservices.callbacks.CallbackUrlListener;
-import org.trustedanalytics.metadata.parser.api.MetadataParseRequest;
 
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.util.UriTemplate;

@@ -33,7 +33,7 @@ public class ValidatingParserTest {
 
     @Test
     public void testParse() throws Exception {
-        parser.parse(Request.newInstance(1, "req#1", new URI("file:///foo/bar.txt")));
+        parser.parse(Request.newInstance(1, "req#1", "file:///foo/bar.txt"));
 
     }
 

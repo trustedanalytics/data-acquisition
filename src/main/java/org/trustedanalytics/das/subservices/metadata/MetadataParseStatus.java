@@ -13,11 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.das.subservices.downloader;
+package org.trustedanalytics.das.subservices.metadata;
 
-import org.trustedanalytics.das.parser.Request;
+import lombok.Getter;
+import lombok.Setter;
 
-public interface DownloaderClient {
-    DownloadStatus download(Request request);
-    DownloadStatus getStatus(Request request);
+public class MetadataParseStatus {
+    public enum State {
+        DONE,
+        FAILED
+    }
+
+    @Getter @Setter
+    private State state;
+
+    @Getter @Setter
+    private String description;
+
 }

@@ -13,17 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.das.store;
+package org.trustedanalytics.das.subservices.metadata;
 
-import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
-import org.trustedanalytics.metadata.parser.api.Metadata;
+import java.net.URI;
+import java.util.UUID;
 
-public interface MetadataStore {
+public class MetadataParseRequest {
+    @Getter @Setter
+    private String id;
 
-    void put(String key, Metadata matadata);
+    @Getter @Setter
+    private String source;
 
-    Metadata get(String key);
+    @Getter @Setter
+    private String idInObjectStore;
 
-    List<Metadata> search(String query);
+    @Getter @Setter
+    private URI callbackUrl;
+
+    @Getter @Setter
+    private String title;
+
+    @Getter @Setter
+    private String category;
+
+    @Getter @Setter
+    private UUID orgUUID;
+
+    @Getter @Setter
+    private boolean publicRequest;
 }

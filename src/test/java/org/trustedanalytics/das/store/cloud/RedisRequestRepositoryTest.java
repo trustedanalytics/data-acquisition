@@ -50,7 +50,7 @@ public class RedisRequestRepositoryTest {
 
     @Test
     public void get() throws URISyntaxException {
-        Request expected = Request.newInstance("orgID1", 1, "key1", new URI("file:///foo/bar.txt"));
+        Request expected = Request.newInstance("orgID1", 1, "key1", "file:///foo/bar.txt");
         Map<String, Request> entries = (Map<String, Request>) new HashMap<String, Request>();
         entries.put(expected.getOrgUUID() + ":" + expected.getId(), expected);
 
@@ -62,7 +62,7 @@ public class RedisRequestRepositoryTest {
 
     @Test
     public void put() throws URISyntaxException {
-        Request request = Request.newInstance("orgID1", 1, "key1", new URI("file:///foo/bar.txt"));
+        Request request = Request.newInstance("orgID1", 1, "key1", "file:///foo/bar.txt");
         repository.put(request);
 
         verify(hashOps).put(Mockito.eq(request.getOrgUUID() + ":" + request.getId()), Mockito.eq(request));
@@ -71,8 +71,8 @@ public class RedisRequestRepositoryTest {
     @Test
     public void getAll() throws URISyntaxException {
         String orgUUID = "orgID1";
-        Request request = Request.newInstance(orgUUID, 1, "key1", new URI("file:///foo/bar.txt"));
-        Request request2 = Request.newInstance(orgUUID, 2, "key2", new URI("file:///foo/bar.txt"));
+        Request request = Request.newInstance(orgUUID, 1, "key1", "file:///foo/bar.txt");
+        Request request2 = Request.newInstance(orgUUID, 2, "key2", "file:///foo/bar.txt");
         HashMap<String,Request> map = new HashMap<String, Request>();
         map.put(request.getOrgUUID() + ":" + request.getId(), request);
         map.put(request.getOrgUUID() + ":" +request2.getId(), request2);

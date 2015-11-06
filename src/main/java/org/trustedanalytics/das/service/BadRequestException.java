@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.das.subservices.downloader;
+package org.trustedanalytics.das.service;
 
-import org.trustedanalytics.das.parser.Request;
-
-public interface DownloaderClient {
-    DownloadStatus download(Request request);
-    DownloadStatus getStatus(Request request);
+public class BadRequestException extends RuntimeException {
+    public BadRequestException(String msg) {
+        super(msg);
+    }
 }

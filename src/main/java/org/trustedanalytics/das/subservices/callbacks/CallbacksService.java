@@ -36,7 +36,7 @@ import org.trustedanalytics.das.helper.RequestIdGenerator;
 import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.store.RequestStore;
 import org.trustedanalytics.das.subservices.downloader.DownloadStatus;
-import org.trustedanalytics.metadata.parser.api.MetadataParseStatus;
+import org.trustedanalytics.das.subservices.metadata.MetadataParseStatus;
 
 @RestController
 @RequestMapping("/rest/das/callbacks")

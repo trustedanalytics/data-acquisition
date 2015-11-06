@@ -18,9 +18,12 @@ package org.trustedanalytics.das.service;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.Before;
+import org.mockito.ArgumentMatcher;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.das.dataflow.FlowManager;
 import org.trustedanalytics.das.helper.RequestIdGenerator;
@@ -36,6 +39,7 @@ import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.nio.file.AccessDeniedException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -67,58 +71,87 @@ public class RestDataAquisitionServiceTest {
     @InjectMocks
     private RestDataAcquisitionService service;
 
-    @Test
-    public void testAdd() throws Exception {
-
-        String testOrgUUID = UUID.randomUUID().toString();
-        Request request = getTestRequest();
-        request.setToken("2asdas13");
-        request.setOrgUUID(testOrgUUID);
-        when(tokenRetriever.getAuthToken(any(Authentication.class))).thenReturn("1231aessa");
-        when(idGenerator.getId(request.getSource())).thenReturn("2");
+    @Before
+    public void setUp() {
+        when(flowDispatcher.apply(anyString())).thenReturn(new RequestFlowForExistingFile());
         when(flowDispatcher.apply("http")).thenReturn(new RequestFlowForNewFile());
-
-        service.addRequest(request, context);
-
-        Request expected = getTestRequest();
-        expected.setId("2");
-        expected.setOrgUUID(testOrgUUID);
-        verify(requestStore).put(expected);
+        when(flowDispatcher.apply("https")).thenReturn(new RequestFlowForNewFile());
     }
 
     @Test
-    public void testAdd_ForExistingFile() throws Exception {
+    public void testAdd_whenSourceIsHttpResource_DownloadFile() throws Exception {
+        testAdd(getTestHttpRequest());
+    }
+
+    @Test
+    public void testAdd_whenSourceIsHdfs_SkipDownloadAndNotify() throws Exception {
+        testAdd(getTestRequestWithHdfsFile(), Request.State.VALIDATED);
+    }
+
+    @Test
+    public void testAdd_whenSourceIsLocalFile_SkipDownloadAndNotify() throws Exception {
+        testAdd(getTestRequestWithLocalFile1(), Request.State.VALIDATED);
+    }
+
+    @Test
+    public void testAdd_whenSourceIsLocalFile2_SkipDownloadAndNotify() throws Exception {
+        testAdd(getTestRequestWithLocalFile2(), Request.State.VALIDATED);
+    }
+
+    @Test
+    public void testAdd_whenSourceIsLocalFile3_SkipDownloadAndNotify() throws Exception {
+        testAdd(getTestRequestWithLocalFile3(), Request.State.VALIDATED);
+
+    }
+
+    private void testAdd(Request request) throws AccessDeniedException {
+        testAdd(request, Request.State.NEW);
+    }
+
+    private void testAdd(Request request, Request.State expectedState) throws AccessDeniedException {
+        Request expected = Request.newInstance(request);
+
         String testOrgUUID = UUID.randomUUID().toString();
-        Request request = getTestRequestWithHdfsFile();
         request.setToken("2asdas13");
         request.setOrgUUID(testOrgUUID);
         when(tokenRetriever.getAuthToken(any(Authentication.class))).thenReturn("1231aessa");
         when(idGenerator.getId(request.getSource())).thenReturn("2");
-        when(flowDispatcher.apply("hdfs")).thenReturn(new RequestFlowForExistingFile());
 
         service.addRequest(request, context);
 
-        Request expected = getTestRequestWithHdfsFile();
-        expected.setState(Request.State.VALIDATED);
+        expected.setState(expectedState);
         expected.setId("2");
         expected.setOrgUUID(testOrgUUID);
         verify(requestStore).put(expected);
     }
 
-    private Request getTestRequest() {
-        return Request.newInstance("org", 1, "1", URI.create("http:///foo/bar.txt"));
+
+    private Request getTestHttpRequest() {
+        return Request.newInstance("org", 1, "1", "http://foo/bar.txt");
     }
 
     private Request getTestRequestWithHdfsFile() {
-        return Request.newInstance("org", 1, "1", URI.create("hdfs://nameservice1/org/intel/hdfsbroker/userspace/c5378e1f-a35b-4b8b-b800/b519d8c7-2fc0-4842-920b/000000_1"));
+        return Request.newInstance("org", 1, "1", "hdfs://nameservice1/org/intel/hdfsbroker/userspace/c5378e1f-a35b-4b8b-b800/b519d8c7-2fc0-4842-920b/000000_1");
+    }
+
+    private Request getTestRequestWithLocalFile1() {
+        return Request.newInstance("org", 1, "1", "file.csv");
+    }
+
+    private Request getTestRequestWithLocalFile2() {
+        return Request.newInstance("org", 1, "1", "file (1).csv");
+    }
+
+    private Request getTestRequestWithLocalFile3() {
+        return Request.newInstance("org", 1, "1", "file:///file%20(1).csv");
     }
 
     @Test
     public void testGetStatus() throws Exception {
-        Request request = getTestRequest();
+        Request request = getTestHttpRequest();
         when(requestStore.get("1")).thenReturn(Optional.of(request));
         Request current = service.getRequest("1", context);
-        Request expected = getTestRequest();
+        Request expected = getTestHttpRequest();
         assertThat(current, equalTo(expected));
     }
 }

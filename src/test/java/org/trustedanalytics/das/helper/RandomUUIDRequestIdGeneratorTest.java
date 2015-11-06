@@ -51,7 +51,7 @@ public class RandomUUIDRequestIdGeneratorTest {
     @Test
     public void testUniquenessForTheSameInput() throws Exception {
         Set<String> ids = new HashSet<>(REPEAT_COUNT);
-        URI someUri = generateRandomUri();
+        String someUri = generateRandomUri();
         for (int i = 0; i < REPEAT_COUNT; i++) {
             String id = generator.getId(someUri);
             assertFalse("Collision in IDs generated for the same URIs", ids.contains(id));
@@ -59,7 +59,7 @@ public class RandomUUIDRequestIdGeneratorTest {
         }
     }
 
-    private URI generateRandomUri() throws URISyntaxException {
-        return new URI("http://" + RandomStringUtils.randomAlphanumeric(10) + ".com");
+    private String generateRandomUri() {
+        return "http://" + RandomStringUtils.randomAlphanumeric(10) + ".com";
     }
 }

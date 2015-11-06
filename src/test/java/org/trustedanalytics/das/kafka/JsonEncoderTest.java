@@ -30,7 +30,7 @@ public class JsonEncoderTest {
     @Test
     public void testToBytes() throws Exception {
         JsonEncoder jsonEncoder = new JsonEncoder(new VerifiableProperties());
-        byte[] bytes = jsonEncoder.toBytes(Request.newInstance(1, new URI("http://junit.org")));
+        byte[] bytes = jsonEncoder.toBytes(Request.newInstance(1, "http://junit.org"));
         String expected =
                 "{'userId':1,'source':'http://junit.org','state':'NEW','timestamps':{},'publicRequest':false}".replaceAll("'", "\"");
         assertThat(new String(bytes), equalTo(expected));

@@ -26,5 +26,5 @@ public interface RequestIdGenerator {
      * @param uri Address that will be base for random generator
      * @return Random uuid based on given uri
      */
-    String getId(URI uri);
+    String getId(String uri);
 }
