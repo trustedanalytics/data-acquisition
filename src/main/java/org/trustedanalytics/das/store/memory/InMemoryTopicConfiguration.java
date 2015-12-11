@@ -15,7 +15,7 @@
  */
 package org.trustedanalytics.das.store.memory;
 
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -25,17 +25,17 @@ import org.springframework.context.annotation.Profile;
 public class InMemoryTopicConfiguration {
 
     @Bean
-    public BlockingRequestQueue toRequestsParser() {
-        return new BlockingMemoryMultiTopicRequestQueue();
+    public BlockingRequestIdQueue toRequestsParser() {
+        return new BlockingMemoryMultiTopicRequestIdQueue();
     }
 
     @Bean
-    public BlockingRequestQueue toDownloader() {
-        return new BlockingMemoryMultiTopicRequestQueue();
+    public BlockingRequestIdQueue toDownloader() {
+        return new BlockingMemoryMultiTopicRequestIdQueue();
     }
 
     @Bean
-    public BlockingRequestQueue toMetadataParser() {
-        return new BlockingMemoryMultiTopicRequestQueue();
+    public BlockingRequestIdQueue toMetadataParser() {
+        return new BlockingMemoryMultiTopicRequestIdQueue();
     }
 }

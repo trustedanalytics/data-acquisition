@@ -19,8 +19,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import org.springframework.stereotype.Repository;
 
-import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 
 /**
  * Default simple implementation. For testing only. Ack doesn't check anything, always removes given
@@ -28,20 +27,20 @@ import org.trustedanalytics.das.store.BlockingRequestQueue;
  *
  */
 @Repository
-public class BlockingMemoryMultiTopicRequestQueue implements BlockingRequestQueue {
+public class BlockingMemoryMultiTopicRequestIdQueue implements BlockingRequestIdQueue {
 
-    private final ArrayBlockingQueue<Request> queue = new ArrayBlockingQueue<>(10);
+    private final ArrayBlockingQueue<String> queue = new ArrayBlockingQueue<>(10);
 
-    BlockingMemoryMultiTopicRequestQueue() {
+    BlockingMemoryMultiTopicRequestIdQueue() {
     }
 
     @Override
-    public void offer(Request t) {
+    public void offer(String t) {
         queue.offer(t);
     }
 
     @Override
-    public Request take() throws InterruptedException {
+    public String take() throws InterruptedException {
         return queue.take();
     }
 

@@ -17,52 +17,59 @@ package org.trustedanalytics.das.subservices;
 
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.trustedanalytics.das.store.RequestStore;
 
 import static org.trustedanalytics.das.parser.Request.State.ERROR;
 
 /**
  * Executes given procedure for items pulled from queue. It uses single thread.
- *
+ * <p>
  * It could (and was before) generic on type data collected from queue
- *
  */
 public class PoolingThreadedService extends AbstractExecutionThreadService {
 
-    private BlockingRequestQueue queue;
+    private BlockingRequestIdQueue queue;
     private Consumer<Request> handler;
     private String name;
     private static final Logger LOGGER = LoggerFactory.getLogger(PoolingThreadedService.class);
 
-    public PoolingThreadedService(BlockingRequestQueue queue, Consumer<Request> handler,
-                                  String name) {
+    private RequestStore requestStore;
+
+    public PoolingThreadedService(BlockingRequestIdQueue queue, Consumer<Request> handler,
+                                  String name, RequestStore requestStore) {
         this.queue = queue;
         this.handler = handler;
         this.name = name;
+        this.requestStore = requestStore;
     }
 
-    @Override protected void run() throws Exception {
+    @Override
+    protected void run() throws Exception {
         while (isRunning()) {
             Optional
                     .ofNullable(queue.take())
                     .ifPresent(item -> {
                         try {
-                            handler.accept(item);
+                            Optional<Request> request = requestStore.get(item);
+                            handler.accept(request.get());
                         } catch (Exception e) {
                             LOGGER.warn("Error processing request: " + item, e);
-                            item.changeState(ERROR);
+                            Optional<Request> request = requestStore.get(item);
+                            request.get().changeState(ERROR);
                         }
                     });
         }
     }
 
-    @Override protected String serviceName() {
+    @Override
+    protected String serviceName() {
         return "QueuePoolingService(" + name + ")";
     }
 }

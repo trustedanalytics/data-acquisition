@@ -30,8 +30,7 @@ import kafka.serializer.Decoder;
 import kafka.serializer.StringDecoder;
 import kafka.utils.VerifiableProperties;
 
-import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import org.trustedanalytics.das.store.QueueItemConsumer;
 
 import java.util.List;
@@ -40,15 +39,14 @@ import java.util.Properties;
 
 /**
  * TODO: check method shutdown in scala code, what does it do, is autocloseable really needed
- * 
+ *
  *
  */
-public class KafkaRequestQueue implements BlockingRequestQueue, AutoCloseable {
+public class KafkaRequestIdQueue implements BlockingRequestIdQueue, AutoCloseable {
 
     private static final int FIRST_ELEMENT_INDEX = 0;
 
     private static final int TOPIC_COUNT = 1;
-
 
     private static final VerifiableProperties emptyProps = new VerifiableProperties();
 
@@ -56,17 +54,17 @@ public class KafkaRequestQueue implements BlockingRequestQueue, AutoCloseable {
 
     private final String topic;
 
-    private final ConsumerIterator<String, Request> streamIterator;
+    private final ConsumerIterator<String, String> streamIterator;
 
-    private Producer<String, Request> producer;
+    private Producer<String, String> producer;
 
-    private Decoder<Request> msgDecoder;
+    private Decoder<String> msgDecoder;
 
     private Decoder<String> keyDecoder;
 
-    public KafkaRequestQueue(String topic, Properties producerProperties,
-        Properties consumerProperties,
-        Decoder<String> keyDecoder, Decoder<Request> msgDecoder) {
+    public KafkaRequestIdQueue(String topic, Properties producerProperties,
+                               Properties consumerProperties,
+                               Decoder<String> keyDecoder, Decoder<String> msgDecoder) {
         ConsumerConfig consumerConfig = new ConsumerConfig(consumerProperties);
         consumer = kafka.consumer.Consumer.createJavaConsumerConnector(consumerConfig);
         ProducerConfig producerConfig = new ProducerConfig(producerProperties);
@@ -80,36 +78,37 @@ public class KafkaRequestQueue implements BlockingRequestQueue, AutoCloseable {
     /**
      * Modified example from kafka site with some defensive checks added.
      */
-    private ConsumerIterator<String, Request> getStreamIterator() {
+    private ConsumerIterator<String, String> getStreamIterator() {
         Map<String, Integer> topicCountMap = ImmutableMap.of(topic, TOPIC_COUNT);
-        Map<String, List<KafkaStream<String, Request>>> consumerMap =
+        Map<String, List<KafkaStream<String, String>>> consumerMap =
                 consumer.createMessageStreams(topicCountMap, keyDecoder, msgDecoder);
-        List<KafkaStream<String, Request>> streams = consumerMap.get(topic);
+        List<KafkaStream<String, String>> streams = consumerMap.get(topic);
         Preconditions.checkNotNull(streams, "There is no topic named : " + topic);
         //copy in case of live list returned. Needed for index check below.
-        ImmutableList<KafkaStream<String, Request>> streamsCopy = ImmutableList.copyOf(streams);
+        ImmutableList<KafkaStream<String, String>> streamsCopy = ImmutableList.copyOf(streams);
 
         Preconditions.checkElementIndex(FIRST_ELEMENT_INDEX, streamsCopy.size(),
                 "Failed to find any KafkaStreams related to topic : " + topic);
-        KafkaStream<String, Request> stream = streamsCopy.get(FIRST_ELEMENT_INDEX);
+        KafkaStream<String, String> stream = streamsCopy.get(FIRST_ELEMENT_INDEX);
 
         Preconditions.checkNotNull(stream, "Returned kafka stream is null");
 
-        ConsumerIterator<String, Request> iterator = stream.iterator();
+        ConsumerIterator<String, String> iterator = stream.iterator();
         Preconditions.checkNotNull(iterator, "Returned kafka iterator is null");
         return iterator;
     }
 
     @Override
-    public void offer(Request request) {
-        producer.send(new KeyedMessage<>(topic, request));
+    public void offer(String requestId) {
+        producer.send(new KeyedMessage<>(topic, requestId));
     }
 
 
     @Override
-    public Request take() throws InterruptedException {
+    public String take() throws InterruptedException {
         if (streamIterator.hasNext()) {
-            MessageAndMetadata<String, Request> next = streamIterator.next();
+            MessageAndMetadata<String, String> next = streamIterator.next();
+            System.out.print(next);
             return next.message();
         }
         // TODO: check if kafka next.message() can return null, if so we need to change return type
@@ -118,8 +117,8 @@ public class KafkaRequestQueue implements BlockingRequestQueue, AutoCloseable {
     }
 
     @Override
-    public void processItem(QueueItemConsumer<Request> consumer) throws Exception {
-        BlockingRequestQueue.super.processItem(consumer);
+    public void processItem(QueueItemConsumer<String> consumer) throws Exception {
+        BlockingRequestIdQueue.super.processItem(consumer);
         // TODO : implement ACK functionality when needed
     }
 
@@ -131,8 +130,9 @@ public class KafkaRequestQueue implements BlockingRequestQueue, AutoCloseable {
         if (consumer != null) consumer.shutdown();
     }
 
-    public static KafkaRequestQueue newJsonQueue(String topic, Properties producerProperties, Properties consumerProperties) {
-        return new KafkaRequestQueue(topic, producerProperties,
-                consumerProperties, new StringDecoder(emptyProps), new JsonDecoder(emptyProps));
+    public static KafkaRequestIdQueue newJsonQueue(String topic, Properties producerProperties, Properties consumerProperties) {
+        return new KafkaRequestIdQueue(topic, producerProperties,
+                consumerProperties, new StringDecoder(emptyProps), new StringDecoder(emptyProps));
     }
 }
+

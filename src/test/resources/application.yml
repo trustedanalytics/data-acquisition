@@ -7,7 +7,7 @@ topic:
 kafka:
   clusterType: distributed
   producer:
-    serializer.class: org.trustedanalytics.das.kafka.JsonEncoder
+    serializer.class: kafka.serializer.StringEncoder
     key.serializer.class: kafka.serializer.StringEncoder
     metadata.broker.list: ${vcap.services.kafka.credentials.uri}
 

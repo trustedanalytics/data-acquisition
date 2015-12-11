@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableSet;
 import org.trustedanalytics.das.service.FlowHandler;
 import org.trustedanalytics.das.service.RequestFlowForExistingFile;
 import org.trustedanalytics.das.service.RequestFlowForNewFile;
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,7 +29,7 @@ import java.util.function.Function;
 public class FlowConfiguration {
 
     @Bean
-    public FlowManager flowManager(BlockingRequestQueue toRequestsParser, BlockingRequestQueue toDownloader, BlockingRequestQueue toMetadataParser) {
+    public FlowManager flowManager(BlockingRequestIdQueue toRequestsParser, BlockingRequestIdQueue toDownloader, BlockingRequestIdQueue toMetadataParser) {
         return new FlowManager(toRequestsParser, toDownloader, toMetadataParser);
     }
 

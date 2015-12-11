@@ -18,14 +18,13 @@ package org.trustedanalytics.das.store.memory;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 
 /**
  * 
@@ -39,23 +38,23 @@ public class BlockingMemoryMultiTopicQueueTest {
 
     @Test
     public void testOffer() throws Exception {
-        BlockingRequestQueue queue = new BlockingMemoryMultiTopicRequestQueue();
+        BlockingRequestIdQueue queue = new BlockingMemoryMultiTopicRequestIdQueue();
 
-        queue.offer(Request.newInstance(1, "request#1", "file:///foo/bar"));
-        Request request = queue.take();
-        assertThat(request.getId(), equalTo("request#1"));
+        queue.offer("request#1");
+        String requestId = queue.take();
+        assertThat(requestId, equalTo("request#1"));
     }
 
     @Test
     public void testSeparation() throws URISyntaxException, InterruptedException {
-        BlockingRequestQueue topic1 = new BlockingMemoryMultiTopicRequestQueue();
-        BlockingRequestQueue topic2 = new BlockingMemoryMultiTopicRequestQueue();
+        BlockingRequestIdQueue topic1 = new BlockingMemoryMultiTopicRequestIdQueue();
+        BlockingRequestIdQueue topic2 = new BlockingMemoryMultiTopicRequestIdQueue();
 
-        topic1.offer(Request.newInstance(1, "request#1", "file:///foo/bar"));
-        topic2.offer(Request.newInstance(1, "request#2", "file:///foo/bar"));
+        topic1.offer("request#1");
+        topic2.offer("request#2");
 
-        assertThat(topic1.take().getId(), equalTo("request#1"));
-        assertThat(topic2.take().getId(), equalTo("request#2"));
+        assertThat(topic1.take(), equalTo("request#1"));
+        assertThat(topic2.take(), equalTo("request#2"));
     }
 
     /**
@@ -71,7 +70,7 @@ public class BlockingMemoryMultiTopicQueueTest {
     @Test(expected = InterruptedException.class)
     public void testBlocking() throws URISyntaxException, InterruptedException {
         Thread.currentThread().interrupt();
-        BlockingRequestQueue topic1 = new BlockingMemoryMultiTopicRequestQueue();
+        BlockingRequestIdQueue topic1 = new BlockingMemoryMultiTopicRequestIdQueue();
         topic1.take();
     }
 

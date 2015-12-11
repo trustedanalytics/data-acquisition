@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
 import com.google.common.base.Preconditions;
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import static org.trustedanalytics.das.kafka.KafkaConstants.KAFKA_EMBEDED_TYPE;
 
 @Configuration
@@ -131,18 +131,18 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    public BlockingRequestQueue toRequestsParser() throws IOException {
-        return KafkaRequestQueue.newJsonQueue(toRequestsParser, getProducerProps(), getConsumerProps());
+    public BlockingRequestIdQueue toRequestsParser() throws IOException {
+        return KafkaRequestIdQueue.newJsonQueue(toRequestsParser, getProducerProps(), getConsumerProps());
     }
 
     @Bean
-    public BlockingRequestQueue toDownloader() throws IOException {
-        return KafkaRequestQueue.newJsonQueue(toDownloader, getProducerProps(), getConsumerProps());
+    public BlockingRequestIdQueue toDownloader() throws IOException {
+        return KafkaRequestIdQueue.newJsonQueue(toDownloader, getProducerProps(), getConsumerProps());
     }
 
     @Bean
-    public BlockingRequestQueue toMetadataParser() throws IOException {
-        return KafkaRequestQueue.newJsonQueue(toMetadataParser, getProducerProps(), getConsumerProps());
+    public BlockingRequestIdQueue toMetadataParser() throws IOException {
+        return KafkaRequestIdQueue.newJsonQueue(toMetadataParser, getProducerProps(), getConsumerProps());
     }
 
     public Map<String, String> getProducer() {

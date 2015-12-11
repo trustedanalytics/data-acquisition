@@ -19,8 +19,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
-import org.trustedanalytics.das.parser.Request;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.trustedanalytics.das.helper.RandomUUIDRequestIdGenerator;
+import org.trustedanalytics.das.helper.RequestIdGenerator;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
 
@@ -34,8 +37,10 @@ public class KafkaQueueTest {
 
     private static String TOPIC = "test";
 
-    private Producer<String, Request> producer;
-    
+    private RequestIdGenerator generator;
+
+    private Producer<String, String> producer;
+
     private static KafkaEmbeded kafka = new KafkaEmbeded();
 
     @BeforeClass
@@ -48,17 +53,18 @@ public class KafkaQueueTest {
     public void setupProducer() {
         ProducerConfig pConfig = new ProducerConfig(kafka.getDefaultProducerConfig());
         producer = new Producer<>(pConfig);
+        generator = new RandomUUIDRequestIdGenerator();
     }
 
     @Test
-    public void testConsumer() throws InterruptedException {
-        Request expected = Request.newInstance("some_org", 1, "marian", null);
-        KafkaRequestQueue queue =
-                KafkaRequestQueue.newJsonQueue(TOPIC, kafka.getDefaultProducerConfig(),
+    public void testConsumer() throws InterruptedException, URISyntaxException {
+        String expectedId = generator.getId(generateRandomUri());
+        KafkaRequestIdQueue queue =
+                KafkaRequestIdQueue.newJsonQueue(TOPIC, kafka.getDefaultProducerConfig(),
                         kafka.getDefaultConsumerConfig());
 
-        queue.offer(expected);
-        assertThat(queue.take(), equalTo(expected));
+        queue.offer(expectedId);
+        assertThat(queue.take(), equalTo(expectedId));
         queue.close();
     }
 
@@ -70,5 +76,9 @@ public class KafkaQueueTest {
     @AfterClass
     public static void tearDown() throws IOException {
         kafka.shutdown();
+    }
+
+    private String generateRandomUri() {
+        return "http://" + RandomStringUtils.randomAlphanumeric(10) + ".com";
     }
 }

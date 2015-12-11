@@ -13,24 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.das.kafka;
+package org.trustedanalytics.das.store;
 
-import kafka.serializer.Encoder;
-import kafka.utils.VerifiableProperties;
-
-import com.google.gson.Gson;
 import org.trustedanalytics.das.parser.Request;
 
-public class JsonEncoder implements Encoder<Request> {
+/**
+ * Approximation of publish/subscribe interface
+ * 
+ */
+public interface BlockingRequestIdQueue {
 
-    private static final Gson gson = new Gson();
+    /**
+     * Adds element to queue
+     * @param item Item to add
+     */
+    void offer(String item);
 
-    public JsonEncoder(VerifiableProperties props) {
+    /**
+     * Retrieves element with removing it, or block if queue is empty
+     * @return Request element
+     * @throws InterruptedException if interrupted while waiting
+     */
+    String take() throws InterruptedException;
+
+    default void processItem(QueueItemConsumer<String> consumer) throws Exception {
+        String requestId = take();
+        consumer.consumeItem(requestId);
     }
-
-    @Override
-    public byte[] toBytes(Request request) {
-        return gson.toJson(request).getBytes();
-    }
-
 }

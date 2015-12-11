@@ -38,7 +38,6 @@ public class Request {
     public enum State {
         NEW, VALIDATED, DOWNLOADED, FINISHED, ERROR
     }
-
     @Getter @Setter
     private String id;
 

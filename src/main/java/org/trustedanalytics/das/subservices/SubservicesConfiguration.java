@@ -19,7 +19,8 @@ import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.cloud.auth.OAuth2TokenRetriever;
 import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.parser.RequestParsingService;
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
+import org.trustedanalytics.das.store.RequestStore;
 import org.trustedanalytics.das.subservices.downloader.DownloaderClient;
 import org.trustedanalytics.das.subservices.downloader.RestDownloaderClient;
 import org.trustedanalytics.das.subservices.metadata.MetadataParser;
@@ -45,24 +46,27 @@ public class SubservicesConfiguration {
 
     @Value("${services.downloader}")
     private String downloaderUrl;
-    
+
     @Value("${services.metadataparser}")
     private String metadataParserUrl;
-    
+
     @Value("${callback.url}")
     private String callbackUrl;
-    
+
+    @Autowired
+    private RequestStore requestStore;
+
     @Autowired
     private RequestParsingService requestParsingService;
 
     @Resource(name = "toRequestsParser")
-    private BlockingRequestQueue toRequestsParser;
+    private BlockingRequestIdQueue toRequestsParser;
 
     @Resource(name = "toDownloader")
-    private BlockingRequestQueue toDownloader;
+    private BlockingRequestIdQueue toDownloader;
 
     @Resource(name = "toMetadataParser")
-    private BlockingRequestQueue toMetadataParser;
+    private BlockingRequestIdQueue toMetadataParser;
 
     @Bean
     public DownloaderClient downloaderClient() {
@@ -73,7 +77,7 @@ public class SubservicesConfiguration {
     public RestOperations metadataParserTemplate() {
         return new RestTemplate();
     }
-    
+
     @Bean
     public MetadataParser metadataParser() {
         return new RestMetadataParserClient(metadataParserTemplate(), metadataParserUrl, callbackUrl);
@@ -86,17 +90,17 @@ public class SubservicesConfiguration {
 
     private List<PoolingThreadedService> requestParsingServices() {
         return createServices(
-            toRequestsParser, requestParsingService::parseRequest, "parsing", 2);
+                toRequestsParser, requestParsingService::parseRequest, "parsing", 2);
     }
 
     private List<PoolingThreadedService> downloadingServices() {
         return createServices(
-            toDownloader, downloaderClient()::download, "downloading", 2);
+                toDownloader, downloaderClient()::download, "downloading", 2);
     }
 
     private List<PoolingThreadedService> metaparsingServices() {
         return createServices(
-            toMetadataParser, metadataParser()::processRequest, "metaparsing", 4);
+                toMetadataParser, metadataParser()::processRequest, "metaparsing", 4);
     }
 
     // TODO: should be wrapped so that "awaitStopped" is called right after stopAsync
@@ -110,10 +114,10 @@ public class SubservicesConfiguration {
     }
 
     private List<PoolingThreadedService> createServices(
-        BlockingRequestQueue queue, Consumer<Request> handler, String name, int threadsCount) {
+            BlockingRequestIdQueue queue, Consumer<Request> handler, String name, int threadsCount) {
         List<PoolingThreadedService> services = new ArrayList<>(threadsCount);
         for (int i = 0; i < threadsCount; i++) {
-            services.add(new PoolingThreadedService(queue, handler, name));
+            services.add(new PoolingThreadedService(queue, handler, name, requestStore));
         }
         return services;
     }

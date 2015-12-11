@@ -104,7 +104,7 @@ public class KafkaEmbeded {
     public Properties getDefaultProducerConfig() {
         Properties properties =
                 TestUtils.getProducerConfig(getBrokerAddr(), "kafka.producer.DefaultPartitioner");
-        properties.put("serializer.class", JsonEncoder.class.getName());
+        properties.put("serializer.class", "kafka.serializer.StringEncoder");
         properties.put("key.serializer.class", "kafka.serializer.StringEncoder");
         return properties;
     }

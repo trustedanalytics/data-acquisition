@@ -22,9 +22,10 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import org.trustedanalytics.das.subservices.downloader.DownloadStatus;
 import org.trustedanalytics.das.subservices.downloader.RestDownloaderClient;
+import org.trustedanalytics.das.store.RequestStore;
 
 import java.net.URISyntaxException;
 
@@ -44,14 +45,17 @@ public class RestDownloaderClientTest {
     PoolingThreadedService poolingService;
 
     @Mock
-    BlockingRequestQueue toDownload;
+    RequestStore store;
+
+    @Mock
+    BlockingRequestIdQueue toDownload;
 
     @Mock
     RestDownloaderClient client;
 
     @Before
     public void setUp() {
-        poolingService = new PoolingThreadedService(toDownload, client::download, "download");
+        poolingService = new PoolingThreadedService(toDownload, client::download, "download", store);
         serviceManager = new ServiceManager(Lists.newArrayList(poolingService));
     }
 
@@ -59,7 +63,7 @@ public class RestDownloaderClientTest {
     public void download_test_success() throws InterruptedException {
         Request request = new Request();
         when(client.download(request)).thenReturn(new DownloadStatus());
-        when(toDownload.take()).thenReturn(request);
+        when(toDownload.take()).thenReturn(request.getId());
 
         serviceManager.startAsync();
         verify(toDownload, timeout(1000).atLeastOnce()).take();
@@ -71,7 +75,7 @@ public class RestDownloaderClientTest {
     public void download_downloader_unavailable_failover() throws InterruptedException, URISyntaxException {
         Request request = new Request();
         when(client.download(request)).thenThrow(new RestClientException(""));
-        when(toDownload.take()).thenReturn(request);
+        when(toDownload.take()).thenReturn(request.getId());
 
         serviceManager.startAsync();
         verify(toDownload, timeout(1000).atLeastOnce()).take();

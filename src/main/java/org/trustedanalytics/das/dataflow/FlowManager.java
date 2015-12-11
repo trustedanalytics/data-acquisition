@@ -1,4 +1,4 @@
-/**
+`/**
  * Copyright (c) 2015 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ import static org.trustedanalytics.das.parser.Request.State.FINISHED;
 import static org.trustedanalytics.das.parser.Request.State.NEW;
 import static org.trustedanalytics.das.parser.Request.State.VALIDATED;
 
-import org.trustedanalytics.das.store.BlockingRequestQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,35 +35,29 @@ public class FlowManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FlowManager.class);
 
-    private BlockingRequestQueue toRequestParser;
-    private BlockingRequestQueue toDownloader;
-    private BlockingRequestQueue toMetadataParser;
+    private BlockingRequestIdQueue toRequestParser;
+    private BlockingRequestIdQueue toDownloader;
+    private BlockingRequestIdQueue toMetadataParser;
 
     public FlowManager(
-            BlockingRequestQueue toRequestParser,
-            BlockingRequestQueue toDownloader,
-            BlockingRequestQueue toMetadataParser) {
+            BlockingRequestIdQueue toRequestParser,
+            BlockingRequestIdQueue toDownloader,
+            BlockingRequestIdQueue toMetadataParser) {
         this.toRequestParser = toRequestParser;
         this.toDownloader = toDownloader;
         this.toMetadataParser = toMetadataParser;
     }
 
     public void newRequest(Request request) {
-        request.changeState(NEW);
-        LOGGER.debug("newRequest({})", request);
-        enqueue(toRequestParser, request);
+        advanceState(request, NEW, toRequestParser, "newRequest({})");
     }
 
     public void requestParsed(Request request) {
-        request.changeState(VALIDATED);
-        LOGGER.debug("requestParsed({})", request);
-        enqueue(toDownloader, request);
+        advanceState(request, VALIDATED, toDownloader, "requestParsed({})");
     }
 
     public void requestDownloaded(Request request) {
-        request.changeState(DOWNLOADED);
-        LOGGER.debug("requestDownloaded({})", request);
-        enqueue(toMetadataParser, request);
+        advanceState(request, DOWNLOADED, toMetadataParser, "requestDownloaded({})");
     }
 
     public void metadataParsed(Request request) {
@@ -76,7 +70,13 @@ public class FlowManager {
         LOGGER.error("requestFailed({})", request);
     }
 
-    private void enqueue(BlockingRequestQueue queue, Request item) {
+    private void advanceState(Request request, Request.State newState, BlockingRequestIdQueue destinationQueue, String debugMsg) {
+        request.changeState(newState);
+        LOGGER.debug(debugMsg);
+        enqueue(destinationQueue, request.getId());
+    }
+
+    private void enqueue(BlockingRequestIdQueue queue, String item) {
         try {
             queue.offer(item);
         } catch (Exception e) {
