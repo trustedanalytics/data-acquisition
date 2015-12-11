@@ -50,7 +50,10 @@ public class RedisRequestRepositoryTest {
 
     @Test
     public void get() throws URISyntaxException {
-        Request expected = Request.newInstance("orgID1", 1, "key1", "file:///foo/bar.txt");
+        Request expected = new Request.RequestBuilder(1, "file:///foo/bar.txt")
+                .withOrgUUID("orgID1")
+                .withId("key1")
+                .build();
         Map<String, Request> entries = (Map<String, Request>) new HashMap<String, Request>();
         entries.put(expected.getOrgUUID() + ":" + expected.getId(), expected);
 
@@ -62,7 +65,10 @@ public class RedisRequestRepositoryTest {
 
     @Test
     public void put() throws URISyntaxException {
-        Request request = Request.newInstance("orgID1", 1, "key1", "file:///foo/bar.txt");
+        Request request = new Request.RequestBuilder(1, "file:///foo/bar.txt")
+                .withOrgUUID("orgID1")
+                .withId("key1")
+                .build();
         repository.put(request);
 
         verify(hashOps).put(Mockito.eq(request.getOrgUUID() + ":" + request.getId()), Mockito.eq(request));
@@ -71,8 +77,10 @@ public class RedisRequestRepositoryTest {
     @Test
     public void getAll() throws URISyntaxException {
         String orgUUID = "orgID1";
-        Request request = Request.newInstance(orgUUID, 1, "key1", "file:///foo/bar.txt");
-        Request request2 = Request.newInstance(orgUUID, 2, "key2", "file:///foo/bar.txt");
+        Request request = new Request.RequestBuilder(1, "file:///foo/bar.txt")
+                .withOrgUUID(orgUUID).withId("key1").build();
+        Request request2 = new Request.RequestBuilder(2, "file:///foo/bar.txt")
+                .withOrgUUID(orgUUID).withId("key2").build();
         HashMap<String,Request> map = new HashMap<String, Request>();
         map.put(request.getOrgUUID() + ":" + request.getId(), request);
         map.put(request.getOrgUUID() + ":" +request2.getId(), request2);
@@ -90,7 +98,9 @@ public class RedisRequestRepositoryTest {
         String orgUUID = "orgUUID1";
 
         HashMap<String,Request> map = new HashMap<String, Request>();
-        map.put(orgUUID + ":" + key, Request.newInstance(orgUUID, 1, key, null));
+        Request request =  new Request.RequestBuilder(1, null).withOrgUUID(orgUUID).withId(key).build();
+
+        map.put(orgUUID + ":" + key, request);
         when(hashOps.entries()).thenReturn(map);
 
         repository.delete(key);

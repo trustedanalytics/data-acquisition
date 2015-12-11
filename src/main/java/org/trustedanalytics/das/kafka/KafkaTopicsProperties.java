@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.das.service;
+package org.trustedanalytics.das.kafka;
 
-import org.trustedanalytics.das.dataflow.FlowManager;
-import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.RequestStore;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-public class RequestFlowForNewFile implements FlowHandler {
+import java.util.Map;
 
-    public void process(Request request, FlowManager flowManager){
-        flowManager.newRequest(request);
-    }
+@Component
+@ConfigurationProperties(prefix = "topic")
+public class KafkaTopicsProperties {
+    @Getter @Setter
+    private Map<String, String> topics;
 }

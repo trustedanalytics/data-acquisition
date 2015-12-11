@@ -102,7 +102,7 @@ public class InTestConfiguration {
 
         @Override
         public void processRequest(Request request) {
-            flowManager.metadataParsed(request);
+            flowManager.metadataParsed(request.getId());
         }
 
         @Override

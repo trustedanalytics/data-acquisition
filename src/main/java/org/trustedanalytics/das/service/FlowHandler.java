@@ -22,5 +22,5 @@ import org.trustedanalytics.das.store.RequestStore;
 @FunctionalInterface
 public interface FlowHandler {
 
-    void process(Request request, FlowManager flowManager, RequestStore requestStore);
+    void process(Request request, FlowManager flowManager);
 }

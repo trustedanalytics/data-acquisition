@@ -18,6 +18,7 @@ package org.trustedanalytics.das.security.permissions;
 import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.security.PermissionAcquireFilter;
 import org.springframework.stereotype.Component;
+import org.trustedanalytics.das.service.RequestDTO;
 import org.trustedanalytics.das.service.BadRequestException;
 import scala.math.Ordering;
 
@@ -35,8 +36,8 @@ public class OrgPermissionVerifier implements PermissionVerifier {
     }
 
     @Override
-    public void throwForbiddenWhenNotAuthorized(HttpServletRequest context, Request request)
-        throws AccessDeniedException, BadRequestException {
+    public void throwForbiddenWhenNotAuthorized(HttpServletRequest context, RequestDTO request)
+        throws AccessDeniedException {
         UUID[] hasAccess = getAccessibleOrgsIDs(context);
 
         throwBadRequestIfInvalidUuid(request.getOrgUUID());

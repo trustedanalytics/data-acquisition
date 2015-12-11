@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.das.service;
+package org.trustedanalytics.das.parser;
 
-import org.trustedanalytics.das.dataflow.FlowManager;
-import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.RequestStore;
-
-public class RequestFlowForNewFile implements FlowHandler {
-
-    public void process(Request request, FlowManager flowManager){
-        flowManager.newRequest(request);
-    }
+public enum State {
+    NEW, VALIDATED, DOWNLOADED, FINISHED, ERROR
 }

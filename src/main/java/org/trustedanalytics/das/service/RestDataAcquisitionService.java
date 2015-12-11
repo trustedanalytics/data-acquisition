@@ -18,8 +18,6 @@ package org.trustedanalytics.das.service;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
-import com.google.common.collect.ImmutableMap;
-
 import org.apache.commons.lang.StringUtils;
 import org.trustedanalytics.das.security.permissions.PermissionVerifier;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
@@ -42,7 +40,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(value="rest/das/requests")
@@ -76,41 +73,44 @@ public class RestDataAcquisitionService {
     @RequestMapping(method = POST)
     @ResponseBody
     @ResponseStatus(ACCEPTED)
-    public Request addRequest(@RequestBody Request request, HttpServletRequest context)
+    public RequestDTO addRequest(@RequestBody RequestDTO requestDto, HttpServletRequest context)
         throws AccessDeniedException {
-        permissionVerifier.throwForbiddenWhenNotAuthorized(context, request);
+        permissionVerifier.throwForbiddenWhenNotAuthorized(context, requestDto);
 
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final String token = tokenRetriever.getAuthToken(authentication);
 
-        request.setToken(token);
-        LOGGER.debug("add({})", request);
-        request.setId(requestIdGenerator.getId(request.getSource()));
-        String source = request.getSource();
-        if(StringUtils.isBlank(source)) {
+        final Request request =
+                new Request.RequestBuilder(requestDto)
+                .withToken(token)
+                .withId(requestIdGenerator.getId(requestDto.getSource()))
+                .build();
+
+        LOGGER.debug("add({})", requestDto);
+        if(StringUtils.isBlank(request.getSource())) {
             throw new BadRequestException("Missing field value: source");
         }
 
-
         flowDispatcher
-            .apply(source.split(":")[0])
-            .process(request, flowManager, requestStore);
-        return excludeToken(request);
+            .apply(request.getSource().split(":")[0])
+            .process(request, flowManager);
+        return request.toDto();
     }
 
     @RequestMapping(value = "/{id}", method = GET)
     @ResponseBody
-    public Request getRequest(@PathVariable String id, HttpServletRequest context)
+    public RequestDTO getRequest(@PathVariable String id, HttpServletRequest context)
         throws AccessDeniedException {
         LOGGER.debug("get({})", id);
-        Request toReturn = requestStore.get(id).orElseThrow(NoSuchElementException::new);
+        Request request = requestStore.get(id).orElseThrow(NoSuchElementException::new);
+        RequestDTO toReturn = request.toDto();
         permissionVerifier.throwForbiddenWhenNotAuthorized(context, toReturn);
-        return excludeToken(toReturn);
+        return toReturn;
     }
 
     @RequestMapping(method = GET)
     @ResponseBody
-    public List<Request> getAllRequests(@RequestParam(required = false) String orgs, HttpServletRequest context)
+    public List<RequestDTO> getAllRequests(@RequestParam(required = false) String orgs, HttpServletRequest context)
     throws AccessDeniedException {
         LOGGER.debug("getAllRequest()");
 
@@ -131,14 +131,14 @@ public class RestDataAcquisitionService {
             result.putAll(requestStore.getAll(uuid));
         }
 
-        return excludeToken(new ArrayList<>(result.values()));
+        return result.values().stream().map(r -> r.toDto()).collect(Collectors.toList());
     }
 
     @RequestMapping(value = "/{id}", method = DELETE)
     public DefaultResponse delete(@PathVariable String id, HttpServletRequest context)
         throws AccessDeniedException {
         LOGGER.debug("delete({})", id);
-        Request toDelete = requestStore.get(id).orElseThrow(NoSuchElementException::new);
+        RequestDTO toDelete = requestStore.get(id).orElseThrow(NoSuchElementException::new).toDto();
         permissionVerifier.throwForbiddenWhenNotAuthorized(context, toDelete);
         requestStore.delete(id);
         return DefaultResponse.newInstance("OK");
@@ -176,20 +176,5 @@ public class RestDataAcquisitionService {
         public String getMessage() {
             return message;
         }
-    }
-
-    /**
-     * DAS process requests on multiple threads and therefore content (along with token)
-     * needs to be serialized and put into queue. However it must not to be present in
-     * payload when communicating using rest.
-     */
-    private Request excludeToken(Request request) {
-        return Request.newInstance(request, r -> r.setToken(null));
-    }
-
-    private List<Request> excludeToken(Collection<Request> requests) {
-        return requests.stream()
-            .map(this::excludeToken)
-            .collect(Collectors.toList());
     }
 }

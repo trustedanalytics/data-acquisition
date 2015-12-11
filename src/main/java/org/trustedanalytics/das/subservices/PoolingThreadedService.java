@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.trustedanalytics.das.store.RequestStore;
 
-import static org.trustedanalytics.das.parser.Request.State.ERROR;
+import static org.trustedanalytics.das.parser.State.ERROR;
 
 /**
  * Executes given procedure for items pulled from queue. It uses single thread.
@@ -55,14 +55,15 @@ public class PoolingThreadedService extends AbstractExecutionThreadService {
         while (isRunning()) {
             Optional
                     .ofNullable(queue.take())
-                    .ifPresent(item -> {
+                    .map(requestId -> requestStore.get(requestId).get())
+                    .ifPresent(request -> {
                         try {
-                            Optional<Request> request = requestStore.get(item);
-                            handler.accept(request.get());
+                            LOGGER.info("Prrocessing request: " + request);
+                            handler.accept(request);
+
                         } catch (Exception e) {
-                            LOGGER.warn("Error processing request: " + item, e);
-                            Optional<Request> request = requestStore.get(item);
-                            request.get().changeState(ERROR);
+                            LOGGER.warn("Error processing request: " + request, e);
+                            requestStore.put(request.changeState(ERROR));
                         }
                     });
         }

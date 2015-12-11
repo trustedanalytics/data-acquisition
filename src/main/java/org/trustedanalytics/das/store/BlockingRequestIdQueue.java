@@ -19,7 +19,7 @@ import org.trustedanalytics.das.parser.Request;
 
 /**
  * Approximation of publish/subscribe interface
- * 
+ *
  */
 public interface BlockingRequestIdQueue {
 

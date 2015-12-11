@@ -13,15 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.trustedanalytics.das.parser;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.trustedanalytics.das.service.RequestDTO;
+
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -32,104 +41,223 @@ import java.util.function.Consumer;
 /**
  * Information about submitted request : status etc.
  */
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Request {
+    public static class RequestBuilder {
+
+        private String id;
+
+        private int userId;
+
+        private String source;
+
+        private State state;
+
+        private String idInObjectStore;
+
+        private String category;
+
+        private String title;
+
+        private String orgUUID;
+
+        private String token;
+
+        private Map<State, Long> timestamps;
+
+        private boolean publicRequest;
+
+        public RequestBuilder(int userId, String source) {
+            this.userId = userId;
+            this.source = source;
+            this.timestamps = new HashMap<>();
+            this.state = State.NEW;
+        }
+
+        public RequestBuilder(Request original) {
+            category = original.getCategory();
+            id = original.getId();
+            idInObjectStore = original.getIdInObjectStore();
+            orgUUID = original.getOrgUUID();
+            publicRequest = original.isPublicRequest();
+            if(StringUtils.isNotBlank(original.getSource())) {
+                source = original.getSource();
+            }
+            else {
+                LOGGER.error("Original request have empty source: " + original);
+            }
+            state = original.getState();
+            title = original.getTitle();
+            token = original.getToken();
+            userId = original.getUserId();
+            timestamps = original.getTimestamps();
+        }
+
+        public RequestBuilder(RequestDTO dto) {
+            category = dto.getCategory();
+            id = dto.getId();
+            idInObjectStore = dto.getIdInObjectStore();
+            orgUUID = dto.getOrgUUID();
+            publicRequest = dto.isPublicRequest();
+            source = dto.getSource();
+            state = dto.getState();
+            title = dto.getTitle();
+            userId = dto.getUserId();
+            timestamps = dto.getTimestamps();
+        }
+
+        public RequestBuilder withId(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public RequestBuilder withState(State state) {
+            this.state = state;
+            return this;
+        }
+
+        public RequestBuilder withIdInObjectStore(String idInObjectStore) {
+            this.idInObjectStore = idInObjectStore;
+            return this;
+        }
+
+        public RequestBuilder withCategory(String category) {
+            this.category = category;
+            return this;
+        }
+
+        public RequestBuilder withTitle(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public RequestBuilder withOrgUUID(String orgUUID) {
+            this.orgUUID = orgUUID;
+            return this;
+        }
+
+        public RequestBuilder withToken(String token) {
+            this.token = token;
+            return this;
+        }
+
+        public RequestBuilder withPublicRequest(boolean publicRequest) {
+            this.publicRequest = publicRequest;
+            return this;
+        }
+
+        public RequestBuilder withTimestamps(Map<State, Long> timestamps) {
+            this.timestamps = timestamps;
+            return this;
+        }
+
+        public Request build() {
+            return new Request(id, userId, source, state, idInObjectStore, category,
+                    title, orgUUID, token, publicRequest, timestamps);
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Request.class);
 
-    public enum State {
-        NEW, VALIDATED, DOWNLOADED, FINISHED, ERROR
-    }
-    @Getter @Setter
-    private String id;
-
-    @Getter @Setter
-    private int userId;
-
-    @Getter @Setter
-    private String source;
-
-    @Getter @Setter
-    private State state;
-
-    @Getter @Setter
-    private String idInObjectStore;
-
-    @Getter @Setter
-    private String category;
-
-    @Getter @Setter
-    private String title;
 
     @Getter
-    private Map<State, Long> timestamps = new HashMap<>();
+    private final String id;
 
-    @Getter @Setter
-    private String orgUUID;
+    @Getter
+    private final int userId;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Getter @Setter
-    private String token;
+    @Getter
+    private final String source;
 
-    @Getter @Setter
-    private boolean publicRequest;
+    @Getter
+    private final State state;
 
-    public void setTimestamp(State state) {
+    @Getter
+    private final String idInObjectStore;
+
+    @Getter
+    private final String category;
+
+    @Getter
+    private final String title;
+
+    @Getter
+    private final Map<State, Long> timestamps;
+
+    @Getter
+    private final String orgUUID;
+
+    @Getter
+    private final String token;
+
+    @Getter
+    private final boolean publicRequest;
+
+    @JsonCreator
+    private Request(@JsonProperty("id") String id, @JsonProperty("userId") int userId,
+                    @JsonProperty("source") String source, @JsonProperty("state") State state,
+                    @JsonProperty("idInObjectStore") String idInObjectStore, @JsonProperty("category") String category,
+                    @JsonProperty("title") String title, @JsonProperty("orgUUID") String orgUUID,
+                    @JsonProperty("token") String token, @JsonProperty("publicRequest") boolean publicRequest,
+                    @JsonProperty("timestamps") Map<State, Long> timestamps) {
+        this.id = id;
+        this.userId = userId;
+        this.source = source;
+        this.state = state;
+        this.idInObjectStore = idInObjectStore;
+        this.category = category;
+        this.title = title;
+        this.orgUUID = orgUUID;
+        this.token = token;
+        this.publicRequest = publicRequest;
+        this.timestamps = timestamps;
+    }
+
+    public RequestDTO toDto() {
+        RequestDTO dto = new RequestDTO();
+        dto.setCategory(category);
+        dto.setId(id);
+        dto.setIdInObjectStore(idInObjectStore);
+        dto.setOrgUUID(orgUUID);
+        dto.setPublicRequest(publicRequest);
+        dto.setSource(source);
+        dto.setState(state);
+        dto.setTimestamps(timestamps);
+        dto.setTitle(title);
+        dto.setUserId(userId);
+        return dto;
+    }
+
+
+    public Request setCurrentTimestamp(State newState) {
         long epochSecond = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
-        timestamps.put(state, epochSecond);
-    }
+        Map<State, Long> newTimestamps = new HashMap<State, Long>(timestamps);
+        newTimestamps.put(newState, epochSecond);
 
-    public void changeState(State state) {
-        setTimestamp(state);
-        setState(state);
-    }
-
-    public static Request newInstance(Request request) {
-        final Request copy = new Request();
-        copy.category = request.category;
-        copy.id = request.id;
-        copy.idInObjectStore = request.idInObjectStore;
-        copy.orgUUID = request.orgUUID;
-        copy.publicRequest = request.publicRequest;
-        if(StringUtils.isNotBlank(request.source)) {
-            copy.source = request.source;
-        }
-        else {
-            LOGGER.error("Original request have empty source: " + request);
-        }
-        copy.state = request.state;
-        copy.title = request.title;
-        copy.token = request.token;
-        copy.userId = request.userId;
-        copy.timestamps = new HashMap<State, Long>(request.timestamps);
+        Request copy = new RequestBuilder(this)
+                .withState(newState)
+                .withTimestamps(newTimestamps)
+                .build();
         return copy;
     }
 
-    public static Request newInstance(Request request, Consumer<Request> customizations) {
-        final Request copy = newInstance(request);
-        customizations.accept(copy);
+    public Request changeState(State newState) {
+        Request withNewTimestamp = setCurrentTimestamp(newState);
+        Request copy = new RequestBuilder(withNewTimestamp)
+                .withState(newState)
+                .build();
         return copy;
     }
 
-    public static Request newInstance(int userId, String resource) {
-        Request request = new Request();
-        request.userId = userId;
-        request.source = resource;
-        request.state = State.NEW;
-        return request;
+    public Request setIdInObjectStore(String idInObjectStore) {
+        Request copy = new RequestBuilder(this)
+                .withIdInObjectStore(idInObjectStore)
+                .build();
+        return copy;
     }
 
-    public static Request newInstance(int userId, String requestId, String resource) {
-        Request request = newInstance(userId, resource);
-        request.id = requestId;
-        return request;
-    }
-
-    public static Request newInstance(String orgUUID, int userId, String requestId, String resource) {
-        Request request = newInstance(userId, requestId, resource);
-        request.setOrgUUID(orgUUID);
-        return request;
-    }
-
-    @Override public String toString() {
+   @Override public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Request [id=");
         builder.append(id);

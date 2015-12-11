@@ -25,6 +25,8 @@ import javax.validation.constraints.NotNull;
 
 import com.google.common.collect.Lists;
 
+import kafka.admin.AdminUtils;
+import org.I0Itec.zkclient.ZkClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,9 @@ import static org.trustedanalytics.das.kafka.KafkaConstants.KAFKA_EMBEDED_TYPE;
 @ConfigurationProperties(prefix = "kafka")
 @Profile("cloud")
 public class KafkaConfiguration {
+    enum TopicName {
+        toRequestsParser, toMetadataParser, toDownloader
+    }
 
     private final static Logger logger = LoggerFactory.getLogger(KafkaConfiguration.class);
 
@@ -58,17 +63,8 @@ public class KafkaConfiguration {
     @NotNull
     private String kafkaClusterType;
 
-    @Value("${topic.toRequestsParser}")
-    @NotNull
-    private String toRequestsParser;
-
-    @Value("${topic.toDownloader}")
-    @NotNull
-    private String toDownloader;
-
-    @Value("${topic.toMetadataParser}")
-    @NotNull
-    private String toMetadataParser;
+    @Autowired
+    KafkaTopicsProperties topic;
 
     private KafkaEmbeded kafka;
 
@@ -77,8 +73,7 @@ public class KafkaConfiguration {
         if (isKafkaEmbededEnabled()) {
             kafka = new KafkaEmbeded();
             kafka.start();
-            // TODO: should iterate over all variables in topic.* properties
-            Lists.newArrayList("toRequestsParser", "toDownloader", "toMetadataParser")
+            topic.getTopics().values()
                 .forEach(kafka::createTopic);
         }
     }
@@ -132,17 +127,17 @@ public class KafkaConfiguration {
 
     @Bean
     public BlockingRequestIdQueue toRequestsParser() throws IOException {
-        return KafkaRequestIdQueue.newJsonQueue(toRequestsParser, getProducerProps(), getConsumerProps());
+        return KafkaRequestIdQueue.newJsonQueue(topic.getTopics().get(TopicName.toRequestsParser.name()), getProducerProps(), getConsumerProps());
     }
 
     @Bean
     public BlockingRequestIdQueue toDownloader() throws IOException {
-        return KafkaRequestIdQueue.newJsonQueue(toDownloader, getProducerProps(), getConsumerProps());
+        return KafkaRequestIdQueue.newJsonQueue(topic.getTopics().get(TopicName.toDownloader.name()), getProducerProps(), getConsumerProps());
     }
 
     @Bean
     public BlockingRequestIdQueue toMetadataParser() throws IOException {
-        return KafkaRequestIdQueue.newJsonQueue(toMetadataParser, getProducerProps(), getConsumerProps());
+        return KafkaRequestIdQueue.newJsonQueue(topic.getTopics().get(TopicName.toMetadataParser.name()), getProducerProps(), getConsumerProps());
     }
 
     public Map<String, String> getProducer() {

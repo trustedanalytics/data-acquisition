@@ -32,8 +32,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.das.dataflow.FlowManager;
+import org.trustedanalytics.das.dataflow.NoSuchRequestInStore;
 import org.trustedanalytics.das.helper.RequestIdGenerator;
 import org.trustedanalytics.das.parser.Request;
+import org.trustedanalytics.das.parser.State;
+import org.trustedanalytics.das.service.RequestDTO;
 import org.trustedanalytics.das.store.RequestStore;
 import org.trustedanalytics.das.subservices.downloader.DownloadStatus;
 import org.trustedanalytics.das.subservices.metadata.MetadataParseStatus;
@@ -61,76 +64,62 @@ public class CallbacksService {
     @RequestMapping(value = "/downloader/{id}", method = RequestMethod.POST)
     @ResponseBody
     public String downloaderStatusUpdate(@RequestBody DownloadStatus status,
-        @PathVariable String id) {
+                                         @PathVariable String id) {
         LOGGER.debug("Update in downloading for {}, status: {}", id, status);
-        handleStatusChange(id, r -> {
+        try {
             switch (status.getState()) {
                 case "DONE":
-                    r.setIdInObjectStore(status.getSavedObjectId());
-                    flowManager.requestDownloaded(r);
+                    Request request = requestStore.get(id)
+                            .orElseThrow(() ->new NoSuchRequestInStore("No job with id: "+id));
+                    flowManager.requestDownloaded(request.setIdInObjectStore(status.getSavedObjectId()));
                     break;
                 case "FAILED":
-                    flowManager.requestFailed(r);
+                    flowManager.requestFailed(id);
                     break;
                 default:
                     LOGGER.warn("No action on downloader status update: " + status.getState());
             }
-        });
+        }
+        catch(NoSuchRequestInStore e) {
+            throw new HttpMessageNotWritableException(e.getMessage(), e);
+        }
         return RESPONSE_OK;
     }
-    
+
     @RequestMapping(value = "/metadata/{id}", method = RequestMethod.POST)
     public String metadataStatusUpdate(@RequestBody MetadataParseStatus status,
-            @PathVariable String id) {
-        handleStatusChange(id, r -> {
+                                       @PathVariable String id) {
+        try{
             switch (status.getState()) {
                 case DONE:
-                    flowManager.metadataParsed(r);
+                    flowManager.metadataParsed(id);
                     break;
                 case FAILED:
-                    flowManager.requestFailed(r);
+                    flowManager.requestFailed(id);
                     break;
                 default:
                     LOGGER.warn("No action on metadata status update: " + status.getState());
             }
-        });
+        }
+        catch(NoSuchRequestInStore e) {
+            throw new HttpMessageNotWritableException(e.getMessage(), e);
+        }
         return RESPONSE_OK;
     }
 
     @RequestMapping(value = "/uploader", method = RequestMethod.POST)
     @ResponseBody
-    public String uploaderStatusUpdate(@RequestBody Request request) {
+    public String uploaderStatusUpdate(@RequestBody RequestDTO requestDto) {
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         final String token = tokenRetriever.getAuthToken(auth);
 
-        request.setToken(token);
-        handleUpload(request);
+        Request request = new Request.RequestBuilder(requestDto)
+                .withToken(token)
+                .withId(requestIdGenerator.getId(requestDto.getSource()))
+                .build();
+
+        flowManager.requestUploaded(request);
 
         return RESPONSE_OK;
-    }
-
-    private void handleStatusChange(String id, Consumer<Request> consumer) {
-        Request request = requestStore.get(id)
-            .orElseThrow(() -> new HttpMessageNotWritableException("No job with id: " + id));
-        try {
-            consumer.accept(request);
-        } finally {
-            // persist request changed possibly by flowManager
-            requestStore.put(request);
-        }
-    }
-
-    private void handleUpload(Request request) {
-        // we need to create id and skip first two stages because they are performed by uploader
-        request.setId(requestIdGenerator.getId(request.getSource()));
-        request.changeState(Request.State.NEW);
-        request.changeState(Request.State.VALIDATED);
-        requestStore.put(request);
-
-        // from now on this should be treated like any other download
-        flowManager.requestDownloaded(request);
-
-        // persist request changed possibly by flowManager
-        requestStore.put(request);
     }
 }

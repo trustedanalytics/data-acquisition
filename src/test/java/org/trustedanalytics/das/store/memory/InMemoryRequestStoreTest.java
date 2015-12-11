@@ -50,7 +50,7 @@ public class InMemoryRequestStoreTest {
     public void getput() throws URISyntaxException {
         String orgUUID = "orgUUID1";
         String key = "key1";
-        Request request = Request.newInstance(orgUUID, 1, key, "file:///foo/bar.txt");
+        Request request = new Request.RequestBuilder(1, "file:///foo/bar.txt").withOrgUUID(orgUUID).withId(key).build();
         store.put(request);
         assertThat(store.get(key).get(), equalTo(request));
     }
@@ -59,9 +59,9 @@ public class InMemoryRequestStoreTest {
     public void testGetAll() throws Exception {
         String orgUUID1 = "orgUUID1";
         String orgUUID2 = "orgUUID2";
-        Request request1 = Request.newInstance(orgUUID1, 1, "key1", "file:///foo/bar.txt");
-        Request request2 = Request.newInstance(orgUUID1, 2, "key2", "file:///foo/bar.txt");
-        Request request3 = Request.newInstance(orgUUID2, 3, "key3", "file:///foo/bar.txt");
+        Request request1 = new Request.RequestBuilder(1, "file:///foo/bar.txt").withOrgUUID(orgUUID1).withId("key1").build();
+        Request request2 = new Request.RequestBuilder(2, "file:///foo/bar.txt").withOrgUUID(orgUUID1).withId("key2").build();
+        Request request3 = new Request.RequestBuilder(3, "file:///foo/bar.txt").withOrgUUID(orgUUID2).withId("key3").build();
         store.put(request1);
         store.put(request2);
         store.put(request3);
@@ -74,7 +74,8 @@ public class InMemoryRequestStoreTest {
     public void delete() throws URISyntaxException {
         String key = "key1";
         String orgUUID = "orgUUID1";
-        Request request = Request.newInstance(orgUUID, 1, key,"file:///foo/bar.txt");
+        Request request =
+                new Request.RequestBuilder(1, "file:///foo/bar.txt").withOrgUUID(orgUUID).withId(key).build();
         store.put(request);
 
         store.delete(key);

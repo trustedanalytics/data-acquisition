@@ -1,9 +1,10 @@
 server:
   port: 9997
 topic:
-  toRequestsParser: toRequestsParser
-  toDownloader: toDownloader
-  toMetadataParser: toMetadataParser
+  topics:
+    toRequestsParser: toRequestsParser
+    toDownloader: toDownloader
+    toMetadataParser: toMetadataParser
 kafka:
   clusterType: distributed
   producer:

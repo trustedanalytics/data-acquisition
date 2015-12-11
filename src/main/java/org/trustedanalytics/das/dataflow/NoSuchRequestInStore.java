@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.das.service;
+package org.trustedanalytics.das.dataflow;
 
-import org.trustedanalytics.das.dataflow.FlowManager;
-import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.RequestStore;
 
-public class RequestFlowForNewFile implements FlowHandler {
-
-    public void process(Request request, FlowManager flowManager){
-        flowManager.newRequest(request);
+public class NoSuchRequestInStore extends RuntimeException{
+    public NoSuchRequestInStore(String message) {
+        super(message);
     }
 }

@@ -15,6 +15,14 @@
  */
 package org.trustedanalytics.das.store.cloud;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.BoundListOperations;
+import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
+import org.trustedanalytics.das.kafka.KafkaRequestIdQueue;
+import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import org.trustedanalytics.das.store.RequestStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,12 +37,23 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import org.trustedanalytics.das.parser.Request;
 
+import java.io.IOException;
+
 @Configuration
 @Profile("cloud")
 public class CloudStoreConfig {
 
     @Value("requests")
     private String redisRequestsKey;
+
+    @Value("toRequestsParser")
+    private String toRequestsParser;
+
+    @Value("toDownloader")
+    private String toDownloader;
+
+    @Value("toMetadataParser")
+    private String toMetadataParser;
 
     @Bean
     public RequestStore redisRequestStore(RedisOperations<String, Request> redisTemplate) {
@@ -48,7 +67,7 @@ public class CloudStoreConfig {
         template.setConnectionFactory(redisConnectionFactory);
 
         RedisSerializer<String> keySerializer = new StringRedisSerializer();
-        RedisSerializer<Request> requestSerializer = new Jackson2JsonRedisSerializer<Request>(Request.class);
+        Jackson2JsonRedisSerializer<Request> requestSerializer = new Jackson2JsonRedisSerializer<Request>(Request.class);
 
         template.setKeySerializer(keySerializer);
         template.setValueSerializer(requestSerializer);

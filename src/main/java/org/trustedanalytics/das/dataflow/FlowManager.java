@@ -15,18 +15,20 @@
  */
 package org.trustedanalytics.das.dataflow;
 
-import static org.trustedanalytics.das.parser.Request.State.DOWNLOADED;
-import static org.trustedanalytics.das.parser.Request.State.ERROR;
-import static org.trustedanalytics.das.parser.Request.State.FINISHED;
-import static org.trustedanalytics.das.parser.Request.State.NEW;
-import static org.trustedanalytics.das.parser.Request.State.VALIDATED;
+import static org.trustedanalytics.das.parser.State.DOWNLOADED;
+import static org.trustedanalytics.das.parser.State.ERROR;
+import static org.trustedanalytics.das.parser.State.FINISHED;
+import static org.trustedanalytics.das.parser.State.NEW;
+import static org.trustedanalytics.das.parser.State.VALIDATED;
 
+import org.trustedanalytics.das.parser.State;
 import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import org.trustedanalytics.das.parser.Request;
+import org.trustedanalytics.das.store.RequestStore;
 
 /**
  * It manages how the data flow in DAS.
@@ -38,47 +40,67 @@ public class FlowManager {
     private BlockingRequestIdQueue toRequestParser;
     private BlockingRequestIdQueue toDownloader;
     private BlockingRequestIdQueue toMetadataParser;
+    private final RequestStore requestStore;
 
     public FlowManager(
             BlockingRequestIdQueue toRequestParser,
             BlockingRequestIdQueue toDownloader,
-            BlockingRequestIdQueue toMetadataParser) {
+            BlockingRequestIdQueue toMetadataParser,
+            RequestStore requestStore) {
         this.toRequestParser = toRequestParser;
         this.toDownloader = toDownloader;
         this.toMetadataParser = toMetadataParser;
+        this.requestStore = requestStore;
     }
 
-    public void newRequest(Request request) {
-        advanceState(request, NEW, toRequestParser, "newRequest({})");
+    public Request newRequest(Request request) {
+        return advanceState(request, NEW, toRequestParser, "newRequest({})");
     }
 
-    public void requestParsed(Request request) {
-        advanceState(request, VALIDATED, toDownloader, "requestParsed({})");
+    public Request requestParsed(Request request) {
+        return advanceState(request, VALIDATED, toDownloader, "requestParsed({})");
     }
 
-    public void requestDownloaded(Request request) {
-        advanceState(request, DOWNLOADED, toMetadataParser, "requestDownloaded({})");
+    public Request requestDownloaded(Request request) {
+        return advanceState(request, DOWNLOADED, toMetadataParser, "requestDownloaded({})");
     }
 
-    public void metadataParsed(Request request) {
-        request.changeState(FINISHED);
-        LOGGER.debug("metadataParsed({})", request);
+    public Request requestUploaded(Request request) {
+        Request newRequest = request.changeState(State.NEW);
+        Request validatedRequest = newRequest.changeState(State.VALIDATED);
+        requestStore.put(validatedRequest);
+        return requestDownloaded(validatedRequest);
     }
 
-    public void requestFailed(Request request) {
-        request.changeState(ERROR);
-        LOGGER.error("requestFailed({})", request);
+    public Request metadataParsed(String id) {
+        Request metadataParsedRequest = requestStore.get(id)
+                .orElseThrow(() -> new NoSuchRequestInStore("No job with id: " + id));
+        Request finishedRequest = metadataParsedRequest.changeState(FINISHED);
+        requestStore.put(finishedRequest);
+        LOGGER.debug("metadataParsed({})", finishedRequest);
+        return finishedRequest;
     }
 
-    private void advanceState(Request request, Request.State newState, BlockingRequestIdQueue destinationQueue, String debugMsg) {
-        request.changeState(newState);
+    public Request requestFailed(String id) {
+        Request existingRequest = requestStore.get(id)
+                .orElseThrow(() -> new NoSuchRequestInStore("No job with id: " + id));
+        Request failedRequest = existingRequest.changeState(ERROR);
+        requestStore.put(failedRequest);
+        LOGGER.error("requestFailed({})", failedRequest);
+        return failedRequest;
+    }
+
+    private Request advanceState(Request request, State newState, BlockingRequestIdQueue destinationQueue, String debugMsg) {
+        Request requestInNewState = request.changeState(newState);
         LOGGER.debug(debugMsg);
-        enqueue(destinationQueue, request.getId());
+        enqueue(destinationQueue, requestInNewState);
+        return requestInNewState;
     }
 
-    private void enqueue(BlockingRequestIdQueue queue, String item) {
+    private void enqueue(BlockingRequestIdQueue queue, Request item) {
+        requestStore.put(item);
         try {
-            queue.offer(item);
+            queue.offer(item.getId());
         } catch (Exception e) {
             Throwables.propagate(e);
         }

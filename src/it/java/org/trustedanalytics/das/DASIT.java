@@ -16,6 +16,7 @@
 package org.trustedanalytics.das;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -23,6 +24,7 @@ import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
 import org.trustedanalytics.das.parser.Request;
+import org.trustedanalytics.das.parser.State;
 import org.trustedanalytics.das.security.authorization.Authorization;
 import org.junit.After;
 import org.junit.Before;
@@ -42,6 +44,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.trustedanalytics.das.service.RequestDTO;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -111,18 +114,21 @@ public class DASIT {
         permission.setOrganization(org);
         prepareAccessibleOrgList(permission);
 
-        ResponseEntity<Request> response =
+        ResponseEntity<RequestDTO> response =
             testRestTemplate.postForEntity(effectiveBaseUrl,
-                Request.newInstance(org.getGuid().toString(), 0, null, "http://foo/bar.txt"),
-                Request.class);
+                new Request.RequestBuilder(0, "http://foo/bar.txt").withOrgUUID(org.getGuid().toString()).build(),
+                RequestDTO.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.ACCEPTED));
 
-        executor.scheduleWithFixedDelay(() -> statusListenerMock.found(testRestTemplate
-                    .getForObject(effectiveBaseUrl + "/{id}", Request.class,
-                        response.getBody().getId())), 0, 100, TimeUnit.MILLISECONDS);
+        String requestId = response.getBody().getId();
 
-        verify(statusListenerMock, timeout(500)).found(eqState(Request.State.FINISHED));
+        executor.scheduleWithFixedDelay(() -> {
+            final RequestDTO addedRequest = testRestTemplate.getForObject(effectiveBaseUrl + "/{id}", RequestDTO.class, requestId);
+            statusListenerMock.found(addedRequest.getState());
+
+        }, 0, 100, TimeUnit.MILLISECONDS);
+        verify(statusListenerMock, timeout(500)).found(eqState(State.FINISHED));
         verify(authorization, times(2))
             .getAccessibleOrgs(any(HttpServletRequest.class));
 
@@ -141,7 +147,7 @@ public class DASIT {
 
         ResponseEntity<String> response =
                 testRestTemplate.postForEntity(effectiveBaseUrl,
-                        Request.newInstance(org.getGuid().toString(), 0, null, ""),
+                        new Request.RequestBuilder(0, "").withOrgUUID(org.getGuid().toString()).build(),
                         String.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.BAD_REQUEST));
@@ -158,7 +164,7 @@ public class DASIT {
         ResponseEntity<String> response =
             testRestTemplate.postForEntity(
                 effectiveBaseUrl,
-                Request.newInstance(testOrgUUID, 0, null, "source_url"),
+                    new Request.RequestBuilder(0, "source_url").withOrgUUID(testOrgUUID).build(),
                 String.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.FORBIDDEN));
@@ -177,7 +183,7 @@ public class DASIT {
         ResponseEntity<String> response =
                 testRestTemplate.postForEntity(
                         effectiveBaseUrl,
-                        Request.newInstance(testOrgUUID, 0, null, "source_url"),
+                        new Request.RequestBuilder(0, "source_url").withOrgUUID(testOrgUUID).build(),
                         String.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.UNAUTHORIZED));
@@ -188,31 +194,29 @@ public class DASIT {
         executor.shutdown();
     }
 
-    static Request eqState(Request.State state) {
+    static State eqState(State state) {
         return Mockito.argThat(new RequestMatcher(state));
     }
 
-    private static interface StatusListener {
-        void success();
-
-        void found(Request request);
+    private interface StatusListener {
+        void found(State state);
     }
 
 
     /**
      * Matcher that looks for specific request state.
      */
-    private static class RequestMatcher extends ArgumentMatcher<Request> {
+    private static class RequestMatcher extends ArgumentMatcher<State> {
 
-        private Request.State desiredState;
+        private State desiredState;
 
-        public RequestMatcher(Request.State desiredState) {
+        public RequestMatcher(State desiredState) {
             this.desiredState = desiredState;
         }
 
         @Override
-        public boolean matches(Object request) {
-            return ((Request) request).getState() == desiredState;
+        public boolean matches(Object state) {
+            return  state == desiredState;
         }
 
     }

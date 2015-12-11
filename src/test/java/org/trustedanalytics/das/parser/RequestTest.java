@@ -16,7 +16,6 @@
 package org.trustedanalytics.das.parser;
 
 import static org.junit.Assert.assertEquals;
-import static org.trustedanalytics.das.parser.Request.State.NEW;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.assertThat;
 
@@ -28,40 +27,36 @@ import org.junit.Test;
 
 public class RequestTest {
 
-    private Request createTestRequest() throws URISyntaxException {
-        Request request = new Request();
-        request.setCategory("test category");
-        request.setId(UUID.randomUUID().toString());
-        request.setOrgUUID(UUID.randomUUID().toString());
-        request.setSource("http://example.com");
-        request.setState(Request.State.DOWNLOADED);
-        request.setTimestamp(Request.State.DOWNLOADED);
-        request.setTitle("test title");
-        request.setUserId(12);
-        return request;
+    private Request createTestRequest(String source) throws URISyntaxException {
+        return new Request.RequestBuilder(12, source)
+            .withCategory("test category")
+            .withId(UUID.randomUUID().toString())
+            .withOrgUUID(UUID.randomUUID().toString())
+            .withState(State.DOWNLOADED)
+            .withTitle("test title")
+            .build();
     }
-
 
     @Test
     public void setTimestamp_getTimestamps() throws URISyntaxException {
-        Request request = Request.newInstance(0, "http://example.com");
-        request.setTimestamp(NEW);
+        Request request =  new Request.RequestBuilder(0, "http://example.com").build();
+        Request withNewTimestamp = request.setCurrentTimestamp(State.NEW);
         
-        assertThat(request.getTimestamps(), hasKey(Request.State.NEW));
+        assertThat(withNewTimestamp.getTimestamps(), hasKey(State.NEW));
     }
 
     @Test
     public void newInstance_testCopy() throws URISyntaxException {
-        Request request = createTestRequest();
-        Request testRequest = Request.newInstance(request);
+        Request request = createTestRequest("http://example.com");
+        Request testRequest =  new Request.RequestBuilder(request).build();
         assertEquals(request, testRequest);
     }
 
     @Test
     public void newInstance_testCopyEmptySource() throws URISyntaxException {
-        Request request = createTestRequest();
-        request.setSource(null);
-        Request testRequest = Request.newInstance(request);
+        Request request = createTestRequest(null);
+
+        Request testRequest = new Request.RequestBuilder(request).build();
         assertEquals(request, testRequest);
     }
 }

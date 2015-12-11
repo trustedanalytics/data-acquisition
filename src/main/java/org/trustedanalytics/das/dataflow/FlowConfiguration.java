@@ -22,6 +22,7 @@ import org.trustedanalytics.das.service.RequestFlowForNewFile;
 import org.trustedanalytics.das.store.BlockingRequestIdQueue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.trustedanalytics.das.store.RequestStore;
 
 import java.util.function.Function;
 
@@ -29,8 +30,10 @@ import java.util.function.Function;
 public class FlowConfiguration {
 
     @Bean
-    public FlowManager flowManager(BlockingRequestIdQueue toRequestsParser, BlockingRequestIdQueue toDownloader, BlockingRequestIdQueue toMetadataParser) {
-        return new FlowManager(toRequestsParser, toDownloader, toMetadataParser);
+    public FlowManager flowManager(BlockingRequestIdQueue toRequestsParser,
+                                   BlockingRequestIdQueue toDownloader, BlockingRequestIdQueue toMetadataParser,
+                                   RequestStore requestStore) {
+        return new FlowManager(toRequestsParser, toDownloader, toMetadataParser, requestStore);
     }
 
     @Bean

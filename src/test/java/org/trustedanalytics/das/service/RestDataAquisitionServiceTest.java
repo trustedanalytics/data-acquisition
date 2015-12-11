@@ -23,11 +23,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
-import org.mockito.ArgumentMatcher;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.das.dataflow.FlowManager;
 import org.trustedanalytics.das.helper.RequestIdGenerator;
 import org.trustedanalytics.das.parser.Request;
+import org.trustedanalytics.das.parser.State;
 import org.trustedanalytics.das.security.permissions.PermissionVerifier;
 import org.trustedanalytics.das.store.RequestStore;
 import org.junit.Test;
@@ -38,10 +38,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
-import java.net.URI;
 import java.nio.file.AccessDeniedException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -81,77 +81,97 @@ public class RestDataAquisitionServiceTest {
     @Test
     public void testAdd_whenSourceIsHttpResource_DownloadFile() throws Exception {
         testAdd(getTestHttpRequest());
+
     }
 
     @Test
     public void testAdd_whenSourceIsHdfs_SkipDownloadAndNotify() throws Exception {
-        testAdd(getTestRequestWithHdfsFile(), Request.State.VALIDATED);
+        testAdd(getTestRequestWithHdfsFile(), State.VALIDATED, r ->
+                verify(flowManager).requestDownloaded(r));
+
     }
 
     @Test
     public void testAdd_whenSourceIsLocalFile_SkipDownloadAndNotify() throws Exception {
-        testAdd(getTestRequestWithLocalFile1(), Request.State.VALIDATED);
+        testAdd(getTestRequestWithLocalFile1(), State.VALIDATED, r ->
+                verify(flowManager).requestDownloaded(r));
     }
 
     @Test
     public void testAdd_whenSourceIsLocalFile2_SkipDownloadAndNotify() throws Exception {
-        testAdd(getTestRequestWithLocalFile2(), Request.State.VALIDATED);
+        testAdd(getTestRequestWithLocalFile2(), State.VALIDATED, r ->
+                verify(flowManager).requestDownloaded(r));
     }
 
     @Test
     public void testAdd_whenSourceIsLocalFile3_SkipDownloadAndNotify() throws Exception {
-        testAdd(getTestRequestWithLocalFile3(), Request.State.VALIDATED);
+        testAdd(getTestRequestWithLocalFile3(), State.VALIDATED, r ->
+                verify(flowManager).requestDownloaded(r));
 
     }
 
-    private void testAdd(Request request) throws AccessDeniedException {
-        testAdd(request, Request.State.NEW);
+    private void testAdd(Request.RequestBuilder requestBuilder) throws AccessDeniedException {
+        testAdd(requestBuilder, State.NEW, r ->
+                verify(flowManager).newRequest(r));
     }
 
-    private void testAdd(Request request, Request.State expectedState) throws AccessDeniedException {
-        Request expected = Request.newInstance(request);
-
+    private void testAdd(Request.RequestBuilder requestBuilder, State expectedState, Consumer<Request> verify) throws AccessDeniedException {
         String testOrgUUID = UUID.randomUUID().toString();
-        request.setToken("2asdas13");
-        request.setOrgUUID(testOrgUUID);
+        Request request = requestBuilder
+                .withOrgUUID(testOrgUUID)
+                .withToken("2asdas13")
+                .build();
+
+        Request expected = requestBuilder
+                .withState(expectedState)
+                .withId("2")
+                .withOrgUUID(testOrgUUID)
+                .build();
+
         when(tokenRetriever.getAuthToken(any(Authentication.class))).thenReturn("1231aessa");
         when(idGenerator.getId(request.getSource())).thenReturn("2");
 
-        service.addRequest(request, context);
-
-        expected.setState(expectedState);
-        expected.setId("2");
-        expected.setOrgUUID(testOrgUUID);
-        verify(requestStore).put(expected);
+        service.addRequest(request.toDto(), context);
+        verify.accept(expected);
     }
 
 
-    private Request getTestHttpRequest() {
-        return Request.newInstance("org", 1, "1", "http://foo/bar.txt");
+    private Request.RequestBuilder getTestHttpRequest() {
+        return new Request.RequestBuilder(1, "http://foo/bar.txt")
+            .withOrgUUID("org")
+            .withId("1");
     }
 
-    private Request getTestRequestWithHdfsFile() {
-        return Request.newInstance("org", 1, "1", "hdfs://nameservice1/org/intel/hdfsbroker/userspace/c5378e1f-a35b-4b8b-b800/b519d8c7-2fc0-4842-920b/000000_1");
+    private Request.RequestBuilder getTestRequestWithHdfsFile() {
+        return new Request.RequestBuilder(1, "hdfs://nameservice1/org/intel/hdfsbroker/userspace/c5378e1f-a35b-4b8b-b800/b519d8c7-2fc0-4842-920b/000000_1")
+                .withOrgUUID("org")
+                .withId("1");
     }
 
-    private Request getTestRequestWithLocalFile1() {
-        return Request.newInstance("org", 1, "1", "file.csv");
+    private Request.RequestBuilder getTestRequestWithLocalFile1() {
+        return new Request.RequestBuilder(1, "file.csv")
+                .withOrgUUID("org")
+                .withId("1");
     }
 
-    private Request getTestRequestWithLocalFile2() {
-        return Request.newInstance("org", 1, "1", "file (1).csv");
+    private Request.RequestBuilder getTestRequestWithLocalFile2() {
+        return new Request.RequestBuilder(1, "file (1).csv")
+                .withOrgUUID("org")
+                .withId("1");
     }
 
-    private Request getTestRequestWithLocalFile3() {
-        return Request.newInstance("org", 1, "1", "file:///file%20(1).csv");
+    private Request.RequestBuilder getTestRequestWithLocalFile3() {
+        return new Request.RequestBuilder(1, "file:///file%20(1).csv")
+                .withOrgUUID("org")
+                .withId("1");
     }
 
     @Test
     public void testGetStatus() throws Exception {
-        Request request = getTestHttpRequest();
+        Request request = getTestHttpRequest().build();
         when(requestStore.get("1")).thenReturn(Optional.of(request));
-        Request current = service.getRequest("1", context);
-        Request expected = getTestHttpRequest();
+        Request current = new Request.RequestBuilder(service.getRequest("1", context)).build();
+        Request expected = getTestHttpRequest().build();
         assertThat(current, equalTo(expected));
     }
 }

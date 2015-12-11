@@ -15,13 +15,33 @@
  */
 package org.trustedanalytics.das.service;
 
-import org.trustedanalytics.das.dataflow.FlowManager;
-import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.RequestStore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+import lombok.Getter;
+import org.trustedanalytics.das.parser.State;
 
-public class RequestFlowForNewFile implements FlowHandler {
+import java.util.HashMap;
+import java.util.Map;
 
-    public void process(Request request, FlowManager flowManager){
-        flowManager.newRequest(request);
-    }
+@Data
+public class RequestDTO {
+    private String id;
+
+    private int userId;
+
+    private String source;
+
+    private State state;
+
+    private String idInObjectStore;
+
+    private String category;
+
+    private String title;
+
+    private Map<State, Long> timestamps = new HashMap<>();
+
+    private String orgUUID;
+
+    private boolean publicRequest;
 }
