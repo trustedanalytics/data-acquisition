@@ -49,3 +49,5 @@ cf:
   resource: ${vcap.services.sso.credentials.apiEndpoint}
   uaa: ${vcap.services.sso.credentials.uaaUri}
 
+endpoints.enabled: false
+endpoints.health.enabled: true
