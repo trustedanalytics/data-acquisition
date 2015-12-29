@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -122,7 +123,7 @@ public class RestDataAcquisitionService {
                 permissionVerifier.throwForbiddenWhenIdNotListed(hasAccess, UUID.fromString(u));
             }
         } else {
-            uuids = (String[]) hasAccess.stream().map(uuid -> uuid.toString()).toArray();
+            uuids = hasAccess.stream().map(uuid -> uuid.toString()).toArray(String[]::new);
         }
 
         Map<String, Request> result = new HashMap<>();
@@ -132,7 +133,7 @@ public class RestDataAcquisitionService {
 
         return excludeToken(new ArrayList<>(result.values()));
     }
-    
+
     @RequestMapping(value = "/{id}", method = DELETE)
     public DefaultResponse delete(@PathVariable String id, HttpServletRequest context)
         throws AccessDeniedException {
