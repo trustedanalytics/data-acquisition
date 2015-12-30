@@ -18,6 +18,8 @@ package org.trustedanalytics.das.security.permissions;
 import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.security.PermissionAcquireFilter;
 import org.springframework.stereotype.Component;
+import org.trustedanalytics.das.service.BadRequestException;
+import scala.math.Ordering;
 
 import javax.servlet.http.HttpServletRequest;
 import java.nio.file.AccessDeniedException;
@@ -34,10 +36,12 @@ public class OrgPermissionVerifier implements PermissionVerifier {
 
     @Override
     public void throwForbiddenWhenNotAuthorized(HttpServletRequest context, Request request)
-        throws AccessDeniedException {
+        throws AccessDeniedException, BadRequestException {
         UUID[] hasAccess = getAccessibleOrgsIDs(context);
 
+        throwBadRequestIfInvalidUuid(request.getOrgUUID());
         UUID uuid = UUID.fromString(request.getOrgUUID());
+
         throwForbiddenWhenIdNotListed(Arrays.asList(hasAccess), uuid);
     }
 
@@ -46,6 +50,16 @@ public class OrgPermissionVerifier implements PermissionVerifier {
         throws AccessDeniedException {
         if(!hasAccess.contains(uuid)) {
             throw new AccessDeniedException(String.format("You have not access to org: %s", uuid));
+        }
+    }
+
+    @Override
+    public void throwBadRequestIfInvalidUuid(String uuid)
+        throws BadRequestException {
+        try {
+            UUID.fromString(uuid);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(String.format("Organization UUID %s is not a valid UUID", uuid));
         }
     }
 }

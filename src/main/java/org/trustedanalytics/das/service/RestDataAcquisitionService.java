@@ -144,10 +144,9 @@ public class RestDataAcquisitionService {
     }
 
     @ExceptionHandler(BadRequestException.class)
-    @ResponseStatus(NOT_FOUND)
     public void badRequestHandler(BadRequestException exception, HttpServletResponse response ) throws IOException {
-        LOGGER.error("Empty \"source\" on reqest");
-        response.sendError(400, exception.getMessage());
+        LOGGER.warn("Invalid request: " + exception.getMessage());
+        response.sendError(BAD_REQUEST.value(), exception.getMessage());
     }
 
     @ExceptionHandler(NoSuchElementException.class)
@@ -156,10 +155,9 @@ public class RestDataAcquisitionService {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    @ResponseStatus(FORBIDDEN)
     public void accessForbidden( HttpServletResponse response ) throws IOException {
         LOGGER.warn("Access forbidden.");
-        response.sendError(403, "You do not have access to requested organization.");
+        response.sendError(FORBIDDEN.value(), "You do not have access to requested organization.");
     }
     
     public static final class DefaultResponse {
