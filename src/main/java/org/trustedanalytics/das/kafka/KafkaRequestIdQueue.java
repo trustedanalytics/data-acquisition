@@ -105,7 +105,7 @@ public class KafkaRequestIdQueue implements BlockingRequestIdQueue, AutoCloseabl
 
 
     @Override
-    public String take() throws InterruptedException {
+    public synchronized String take() throws InterruptedException {
         if (streamIterator.hasNext()) {
             MessageAndMetadata<String, String> next = streamIterator.next();
             System.out.print(next);
