@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>data-acquisition</artifactId>
-    <version>0.4.16</version>
+    <version>0.4.17</version>
     <name>DAS</name>
     <description>Data Acquisition Service</description>
 
     <parent>
         <groupId>org.trustedanalytics</groupId>
         <artifactId>trustedanalytics-cloud-parent</artifactId>
-        <version>0.4.1</version>
+        <version>0.4.6</version>
     </parent>
 
     <build>
@@ -145,7 +145,7 @@
         <dependency>
             <groupId>org.trustedanalytics</groupId>
             <artifactId>rest-error-handling</artifactId>
-            <version>0.0.1</version>
+            <version>0.0.4</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -159,7 +159,7 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.9.2</artifactId>
-            <version>0.8.1.1</version>
+            <version>0.8.2.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>javax.jms</groupId>
@@ -172,6 +172,10 @@
                 <exclusion>
                     <groupId>com.sun.jdmk</groupId>
                     <artifactId>jmxtools</artifactId>
+                </exclusion>
+                <exclusion>
+                	<artifactId>slf4j-log4j12</artifactId>
+                	<groupId>org.slf4j</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -219,7 +223,7 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.9.2</artifactId>
-            <version>0.8.1.1</version>
+            <version>0.8.2.0</version>
             <!--<scope>test</scope>-->
             <classifier>test</classifier>
             <exclusions>
@@ -266,6 +270,7 @@
         <dependency>
             <groupId>org.trustedanalytics</groupId>
             <artifactId>cf-client</artifactId>
+            <version>0.4.14</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>

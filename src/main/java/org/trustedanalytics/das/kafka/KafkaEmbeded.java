@@ -67,7 +67,7 @@ public class KafkaEmbeded {
                 new ZkClient(zkServer.connectString(), 30000, 30000, ZKStringSerializer$.MODULE$);
         brokerPort = TestUtils.choosePort();
         logger.info("{}", brokerPort);;
-        Properties props = TestUtils.createBrokerConfig(BROKER_ID, brokerPort);
+        Properties props = TestUtils.createBrokerConfig(BROKER_ID, brokerPort, true);
         // props.setProperty("zookeeper.connect", String.valueOf(zkPort));
         props.setProperty("zookeeper.session.timeout.ms", "30000");
         props.setProperty("zookeeper.connection.timeout.ms", "30000");
@@ -103,7 +103,7 @@ public class KafkaEmbeded {
 
     public Properties getDefaultProducerConfig() {
         Properties properties =
-                TestUtils.getProducerConfig(getBrokerAddr(), "kafka.producer.DefaultPartitioner");
+                TestUtils.getProducerConfig(getBrokerAddr());
         properties.put("serializer.class", "kafka.serializer.StringEncoder");
         properties.put("key.serializer.class", "kafka.serializer.StringEncoder");
         return properties;
