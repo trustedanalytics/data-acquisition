@@ -15,13 +15,10 @@
  */
 package org.trustedanalytics.das.security.permissions;
 
-import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.security.PermissionAcquireFilter;
 import org.springframework.stereotype.Component;
 import org.trustedanalytics.das.service.RequestDTO;
 import org.trustedanalytics.das.service.BadRequestException;
-import scala.math.Ordering;
-
 import javax.servlet.http.HttpServletRequest;
 import java.nio.file.AccessDeniedException;
 import java.util.Arrays;
@@ -55,8 +52,7 @@ public class OrgPermissionVerifier implements PermissionVerifier {
     }
 
     @Override
-    public void throwBadRequestIfInvalidUuid(String uuid)
-        throws BadRequestException {
+    public void throwBadRequestIfInvalidUuid(String uuid) {
         try {
             UUID.fromString(uuid);
         } catch (IllegalArgumentException e) {

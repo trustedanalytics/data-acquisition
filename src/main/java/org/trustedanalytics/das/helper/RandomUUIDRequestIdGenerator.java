@@ -17,7 +17,6 @@ package org.trustedanalytics.das.helper;
 
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.UUID;
 
 @Component

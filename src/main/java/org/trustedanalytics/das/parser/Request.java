@@ -18,25 +18,16 @@ package org.trustedanalytics.das.parser;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
-
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.trustedanalytics.das.service.RequestDTO;
-
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Information about submitted request : status etc.
@@ -235,26 +226,23 @@ public class Request {
         Map<State, Long> newTimestamps = new HashMap<State, Long>(timestamps);
         newTimestamps.put(newState, epochSecond);
 
-        Request copy = new RequestBuilder(this)
+        return new RequestBuilder(this)
                 .withState(newState)
                 .withTimestamps(newTimestamps)
                 .build();
-        return copy;
     }
 
     public Request changeState(State newState) {
         Request withNewTimestamp = setCurrentTimestamp(newState);
-        Request copy = new RequestBuilder(withNewTimestamp)
+        return new RequestBuilder(withNewTimestamp)
                 .withState(newState)
                 .build();
-        return copy;
     }
 
     public Request setIdInObjectStore(String idInObjectStore) {
-        Request copy = new RequestBuilder(this)
+        return new RequestBuilder(this)
                 .withIdInObjectStore(idInObjectStore)
                 .build();
-        return copy;
     }
 
    @Override public String toString() {

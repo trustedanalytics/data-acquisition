@@ -17,7 +17,6 @@ package org.trustedanalytics.das.service;
 
 import org.trustedanalytics.das.dataflow.FlowManager;
 import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.RequestStore;
 
 @FunctionalInterface
 public interface FlowHandler {

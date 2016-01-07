@@ -15,11 +15,7 @@
  */
 package org.trustedanalytics.das.security.permissions;
 
-import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.service.RequestDTO;
-
-import org.trustedanalytics.das.service.BadRequestException;
-
 import javax.servlet.http.HttpServletRequest;
 import java.nio.file.AccessDeniedException;
 import java.util.Collection;
@@ -35,6 +31,5 @@ public interface PermissionVerifier {
     void throwForbiddenWhenIdNotListed(Collection<UUID> hasAccess, UUID uuid)
             throws AccessDeniedException;
 
-    void throwBadRequestIfInvalidUuid(String toValidate)
-            throws BadRequestException;
+    void throwBadRequestIfInvalidUuid(String toValidate);
 }

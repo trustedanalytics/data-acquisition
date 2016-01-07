@@ -15,9 +15,7 @@
  */
 package org.trustedanalytics.das.service;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
-import lombok.Getter;
 import org.trustedanalytics.das.parser.State;
 
 import java.util.HashMap;

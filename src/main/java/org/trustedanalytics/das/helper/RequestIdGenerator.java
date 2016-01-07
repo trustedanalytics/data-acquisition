@@ -15,9 +15,6 @@
  */
 package org.trustedanalytics.das.helper;
 
-import java.net.URI;
-
-
 public interface RequestIdGenerator {
 
     /**

@@ -15,8 +15,6 @@
  */
 package org.trustedanalytics.das.subservices.callbacks;
 
-import java.util.function.Consumer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +33,6 @@ import org.trustedanalytics.das.dataflow.FlowManager;
 import org.trustedanalytics.das.dataflow.NoSuchRequestInStore;
 import org.trustedanalytics.das.helper.RequestIdGenerator;
 import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.parser.State;
 import org.trustedanalytics.das.service.RequestDTO;
 import org.trustedanalytics.das.store.RequestStore;
 import org.trustedanalytics.das.subservices.downloader.DownloadStatus;

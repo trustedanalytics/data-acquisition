@@ -18,10 +18,10 @@ package org.trustedanalytics.das.service;
 import org.trustedanalytics.das.dataflow.FlowManager;
 import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.parser.State;
-import org.trustedanalytics.das.store.RequestStore;
 
 public class RequestFlowForExistingFile implements FlowHandler {
 
+    @Override
     public void process(Request request, FlowManager flowManager){
         Request newRequest = request.changeState(State.NEW);
         Request validatedRequest = newRequest.changeState(State.VALIDATED);
