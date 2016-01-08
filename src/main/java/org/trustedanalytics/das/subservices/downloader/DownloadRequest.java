@@ -15,17 +15,22 @@
  */
 package org.trustedanalytics.das.subservices.downloader;
 
+import com.google.common.base.MoreObjects;
+
+import java.util.UUID;
+
 public class DownloadRequest {
 
+    private UUID orgUUID;
     private String source;
     private String callback;
 
-    public String getSource() {
-        return source;
+    public UUID getOrgUUID() {
+        return orgUUID;
     }
 
-    public void setSource(String source) {
-        this.source = source;
+    public void setOrgUUID(UUID orgUUID) {
+        this.orgUUID = orgUUID;
     }
 
     public String getCallback() {
@@ -36,10 +41,20 @@ public class DownloadRequest {
         this.callback = callback;
     }
 
-    @Override public String toString() {
-        return "DownloadRequest{" +
-            "source='" + getSource() + '\'' +
-            ", callback='" + getCallback() + '\'' +
-            '}';
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("orgUUID", orgUUID)
+            .add("source", source)
+            .add("callback", callback)
+            .toString();
     }
 }

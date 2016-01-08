@@ -25,6 +25,8 @@ import org.trustedanalytics.das.helper.RestTokenAuthenticator;
 import org.trustedanalytics.das.parser.Request;
 import org.trustedanalytics.das.subservices.callbacks.CallbackUrlListener;
 
+import java.util.UUID;
+
 public class RestDownloaderClient implements DownloaderClient, CallbackUrlListener {
 
     private final RestTemplate restTemplate;
@@ -57,6 +59,7 @@ public class RestDownloaderClient implements DownloaderClient, CallbackUrlListen
         authenticator.authenticate(restTemplate, request.getToken());
 
         DownloadRequest downloadRequest = new DownloadRequest();
+        downloadRequest.setOrgUUID(UUID.fromString(request.getOrgUUID()));
         downloadRequest.setSource(request.getSource().toString());
         downloadRequest.setCallback(new UriTemplate(callbacksUrl).
                 expand("downloader", request.getId()).toString());
