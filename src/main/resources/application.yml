@@ -11,6 +11,7 @@ kafka:
     serializer.class: kafka.serializer.StringEncoder
     key.serializer.class: kafka.serializer.StringEncoder
     metadata.broker.list: ${vcap.services.kafka.credentials.uri}
+    retry.backoff.ms: 500
 
   consumer:  
     group.id: default_group
@@ -40,11 +41,11 @@ spring.oauth2.resource:
   jwt:
     keyUri: ${vcap.services.sso.credentials.tokenKey}
 
-
 logging:
   level:
     org.springframework: INFO
     org.trustedanalytics: INFO
+    kafka: DEBUG
 
 cf:
   resource: ${vcap.services.sso.credentials.apiEndpoint}
