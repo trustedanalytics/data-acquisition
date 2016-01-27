@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/trustedanalytics/data-acquisition.svg?branch=master)](https://travis-ci.org/trustedanalytics/data-acquisition)
+
 # Data Acquisition Service - DAS
 
 DAS initiates and manages the operations of downloading and parsing data sets. It is a Spring Boot application build by maven
