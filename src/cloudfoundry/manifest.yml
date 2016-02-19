@@ -16,4 +16,4 @@ applications:
   env:
     SPRING_PROFILES_ACTIVE: "cloud"
     VERSION: ${version}
-    JBP_CONFIG_OPEN_JDK_JRE: '[memory_sizes: {metaspace: 70m}, memory_heuristics: {heap: 40, native: 50, stack: 0.05}]'
+    JBP_CONFIG_OPEN_JDK_JRE: '[memory_calculator: {memory_sizes: {metaspace: 70m}, memory_heuristics: {heap: 40, native: 50, stack: 0.05}}]'
