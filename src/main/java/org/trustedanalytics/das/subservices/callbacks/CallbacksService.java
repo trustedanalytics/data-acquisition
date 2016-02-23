@@ -15,6 +15,9 @@
  */
 package org.trustedanalytics.das.subservices.callbacks;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +30,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.das.dataflow.FlowManager;
 import org.trustedanalytics.das.dataflow.NoSuchRequestInStore;
@@ -58,6 +60,11 @@ public class CallbacksService {
     @Autowired
     private RequestIdGenerator requestIdGenerator;
 
+    @ApiOperation(value = "Updates downloader status")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+    })
     @RequestMapping(value = "/downloader/{id}", method = RequestMethod.POST)
     @ResponseBody
     public String downloaderStatusUpdate(@RequestBody DownloadStatus status,
@@ -67,7 +74,7 @@ public class CallbacksService {
             switch (status.getState()) {
                 case "DONE":
                     Request request = requestStore.get(id)
-                            .orElseThrow(() ->new NoSuchRequestInStore("No job with id: "+id));
+                            .orElseThrow(() -> new NoSuchRequestInStore("No job with id: " + id));
                     flowManager.requestDownloaded(request.setIdInObjectStore(status.getSavedObjectId()));
                     break;
                 case "FAILED":
@@ -76,17 +83,21 @@ public class CallbacksService {
                 default:
                     LOGGER.warn("No action on downloader status update: " + status.getState());
             }
-        }
-        catch(NoSuchRequestInStore e) {
+        } catch (NoSuchRequestInStore e) {
             throw new HttpMessageNotWritableException(e.getMessage(), e);
         }
         return RESPONSE_OK;
     }
 
+    @ApiOperation(value = "Updates metadata status")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+    })
     @RequestMapping(value = "/metadata/{id}", method = RequestMethod.POST)
     public String metadataStatusUpdate(@RequestBody MetadataParseStatus status,
                                        @PathVariable String id) {
-        try{
+        try {
             switch (status.getState()) {
                 case DONE:
                     flowManager.metadataParsed(id);
@@ -97,13 +108,17 @@ public class CallbacksService {
                 default:
                     LOGGER.warn("No action on metadata status update: " + status.getState());
             }
-        }
-        catch(NoSuchRequestInStore e) {
+        } catch (NoSuchRequestInStore e) {
             throw new HttpMessageNotWritableException(e.getMessage(), e);
         }
         return RESPONSE_OK;
     }
 
+    @ApiOperation(value = "Updates uploader status")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+    })
     @RequestMapping(value = "/uploader", method = RequestMethod.POST)
     @ResponseBody
     public String uploaderStatusUpdate(@RequestBody RequestDTO requestDto) {

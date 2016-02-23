@@ -15,30 +15,51 @@
  */
 package org.trustedanalytics.das.service;
 
-import static org.springframework.http.HttpStatus.*;
-import static org.springframework.web.bind.annotation.RequestMethod.*;
-
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang.StringUtils;
-import org.trustedanalytics.das.security.permissions.PermissionVerifier;
-import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
-import org.trustedanalytics.das.dataflow.FlowManager;
-import org.trustedanalytics.das.helper.RequestIdGenerator;
-import org.trustedanalytics.das.parser.Request;
-import org.trustedanalytics.das.store.RequestStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
+import org.trustedanalytics.das.dataflow.FlowManager;
+import org.trustedanalytics.das.helper.RequestIdGenerator;
+import org.trustedanalytics.das.parser.Request;
+import org.trustedanalytics.das.security.permissions.PermissionVerifier;
+import org.trustedanalytics.das.store.RequestStore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.ACCEPTED;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RestController
 @RequestMapping(value="rest/das/requests")
@@ -69,6 +90,11 @@ public class RestDataAcquisitionService {
         this.flowDispatcher = flowDispatcher;
     }
 
+    @ApiOperation(value = "Add new acquisition request for file transfer")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK",response = RequestDTO.class),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+    })
     @RequestMapping(method = POST)
     @ResponseBody
     @ResponseStatus(ACCEPTED)
@@ -96,6 +122,11 @@ public class RestDataAcquisitionService {
         return request.toDto();
     }
 
+    @ApiOperation(value = "Get specific acquisition request of file transfer with given id")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK",response = RequestDTO.class),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+    })
     @RequestMapping(value = "/{id}", method = GET)
     @ResponseBody
     public RequestDTO getRequest(@PathVariable String id, HttpServletRequest context)
@@ -107,6 +138,11 @@ public class RestDataAcquisitionService {
         return toReturn;
     }
 
+    @ApiOperation(value = "Get acquisition requests for all file transfers")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK",response = List.class, responseContainer = "List"),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+    })
     @RequestMapping(method = GET)
     @ResponseBody
     public List<RequestDTO> getAllRequests(@RequestParam(required = false) String orgs, HttpServletRequest context)
@@ -133,6 +169,11 @@ public class RestDataAcquisitionService {
         return result.values().stream().map(r -> r.toDto()).collect(Collectors.toList());
     }
 
+    @ApiOperation(value = "Delete specific acquisition request with given id")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK",response = DefaultResponse.class),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+    })
     @RequestMapping(value = "/{id}", method = DELETE)
     public DefaultResponse delete(@PathVariable String id, HttpServletRequest context)
         throws AccessDeniedException {

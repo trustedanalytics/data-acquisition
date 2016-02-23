@@ -34,7 +34,7 @@ callback:
   url: "http://${vcap.application.application_uris[0]:localhost:8080}/rest/das/callbacks/{app}/{requestId}"
 
 security:
-  ignored: /open,/sdoc.jsp,/*.js,/api-docs,/api-docs/default/*,/images/*,/lib/*,/css/*
+  ignored: /open,/v2/api-docs,/api-docs/default/*,/images/*,/lib/*,/css/*
 
 spring.oauth2.resource:
   id: cloud_controller
