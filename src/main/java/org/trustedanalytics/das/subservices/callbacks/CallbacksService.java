@@ -60,7 +60,9 @@ public class CallbacksService {
     @Autowired
     private RequestIdGenerator requestIdGenerator;
 
-    @ApiOperation(value = "Updates downloader status")
+    @ApiOperation(
+            value = "Updates downloader status",
+            notes = "Privilege level: Consumer of this endpoint must be a member of organization based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 500, message = "Internal server error, see logs for details")
@@ -89,7 +91,9 @@ public class CallbacksService {
         return RESPONSE_OK;
     }
 
-    @ApiOperation(value = "Updates metadata status")
+    @ApiOperation(
+            value = "Updates metadata status",
+            notes = "Privilege level: Consumer of this endpoint must be a member of organization based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 500, message = "Internal server error, see logs for details")
@@ -114,7 +118,9 @@ public class CallbacksService {
         return RESPONSE_OK;
     }
 
-    @ApiOperation(value = "Updates uploader status")
+    @ApiOperation(
+            value = "Updates uploader status",
+            notes = "Privilege level: Consumer of this endpoint must be a member of organization based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 500, message = "Internal server error, see logs for details")

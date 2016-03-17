@@ -90,10 +90,15 @@ public class RestDataAcquisitionService {
         this.flowDispatcher = flowDispatcher;
     }
 
-    @ApiOperation(value = "Add new acquisition request for file transfer")
+    @ApiOperation(
+            value = "Add new acquisition request for file transfer",
+            notes = "Privilege level: Consumer of this endpoint must be a member of organization based on valid access token"
+    )
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK",response = RequestDTO.class),
-            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Can't access this organization."),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details.")
     })
     @RequestMapping(method = POST)
     @ResponseBody
@@ -122,15 +127,20 @@ public class RestDataAcquisitionService {
         return request.toDto();
     }
 
-    @ApiOperation(value = "Get specific acquisition request of file transfer with given id")
+    @ApiOperation(
+            value = "Get specific acquisition request of file transfer with given id",
+            notes = "Privilege level: Consumer of this endpoint must be a member of organization based on valid access token"
+    )
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK",response = RequestDTO.class),
-            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Can't access this organization."),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details.")
     })
     @RequestMapping(value = "/{id}", method = GET)
     @ResponseBody
     public RequestDTO getRequest(@PathVariable String id, HttpServletRequest context)
-        throws AccessDeniedException {
+            throws AccessDeniedException {
         LOGGER.debug("get({})", id);
         Request request = requestStore.get(id).orElseThrow(NoSuchElementException::new);
         RequestDTO toReturn = request.toDto();
@@ -138,10 +148,15 @@ public class RestDataAcquisitionService {
         return toReturn;
     }
 
-    @ApiOperation(value = "Get acquisition requests for all file transfers")
+    @ApiOperation(
+            value = "Get acquisition requests for all file transfers",
+            notes = "Privilege level: Consumer of this endpoint must be a member of organization based on valid access token"
+    )
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK",response = List.class, responseContainer = "List"),
-            @ApiResponse(code = 500, message = "Internal server error, see logs for details")
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Can't access this organization."),
+            @ApiResponse(code = 500, message = "Internal server error, see logs for details.")
     })
     @RequestMapping(method = GET)
     @ResponseBody
@@ -169,9 +184,14 @@ public class RestDataAcquisitionService {
         return result.values().stream().map(r -> r.toDto()).collect(Collectors.toList());
     }
 
-    @ApiOperation(value = "Delete specific acquisition request with given id")
+    @ApiOperation(
+            value = "Delete specific acquisition request with given id",
+            notes = "Privilege level: Consumer of this endpoint must be a member of organization based on valid access token"
+    )
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK",response = DefaultResponse.class),
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Can't access this organization."),
             @ApiResponse(code = 500, message = "Internal server error, see logs for details")
     })
     @RequestMapping(value = "/{id}", method = DELETE)

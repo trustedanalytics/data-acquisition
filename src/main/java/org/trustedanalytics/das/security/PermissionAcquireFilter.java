@@ -58,7 +58,7 @@ public class PermissionAcquireFilter extends OncePerRequestFilter {
 
         if(authHeader == null) {
             LOGGER.debug("Request has no authorization header.");
-            httpServletResponse.sendError(401, "You can't access any organization.");
+            httpServletResponse.sendError(401, "Unauthorized.");
         }
         else {
             UUID[] ids = authorization.getAccessibleOrgs(request).stream()
@@ -69,7 +69,7 @@ public class PermissionAcquireFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, httpServletResponse);
             } else {
                 LOGGER.debug("User access denied.");
-                httpServletResponse.sendError(403, "You can't access any organization.");
+                httpServletResponse.sendError(403, "Can't access this organization.");
             }
         }
     }
