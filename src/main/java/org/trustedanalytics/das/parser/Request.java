@@ -35,6 +35,8 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Request {
+    private static final String OTHER = "other";
+
     public static class RequestBuilder {
 
         private String id;
@@ -86,7 +88,7 @@ public class Request {
         }
 
         public RequestBuilder(RequestDTO dto) {
-            category = dto.getCategory();
+            category = StringUtils.isBlank(dto.getCategory()) ? OTHER : dto.getCategory();
             id = dto.getId();
             idInObjectStore = dto.getIdInObjectStore();
             orgUUID = dto.getOrgUUID();

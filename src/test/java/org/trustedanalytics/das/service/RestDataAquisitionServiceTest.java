@@ -110,6 +110,15 @@ public class RestDataAquisitionServiceTest {
 
     }
 
+    @Test
+    public void testGetStatus() throws Exception {
+        Request request = getTestHttpRequest().build();
+        when(requestStore.get("1")).thenReturn(Optional.of(request));
+        Request current = new Request.RequestBuilder(service.getRequest("1", context)).build();
+        Request expected = getTestHttpRequest().withCategory("other").build();
+        assertThat(current, equalTo(expected));
+    }
+
     private void testAdd(Request.RequestBuilder requestBuilder) throws AccessDeniedException {
         testAdd(requestBuilder, State.NEW, r ->
                 verify(flowManager).newRequest(r));
@@ -123,6 +132,7 @@ public class RestDataAquisitionServiceTest {
                 .build();
 
         Request expected = requestBuilder
+                .withCategory("other")
                 .withState(expectedState)
                 .withId("2")
                 .withOrgUUID(testOrgUUID)
@@ -166,12 +176,5 @@ public class RestDataAquisitionServiceTest {
                 .withId("1");
     }
 
-    @Test
-    public void testGetStatus() throws Exception {
-        Request request = getTestHttpRequest().build();
-        when(requestStore.get("1")).thenReturn(Optional.of(request));
-        Request current = new Request.RequestBuilder(service.getRequest("1", context)).build();
-        Request expected = getTestHttpRequest().build();
-        assertThat(current, equalTo(expected));
-    }
+
 }
