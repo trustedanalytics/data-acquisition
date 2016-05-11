@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/trustedanalytics/data-acquisition.svg?branch=master)](https://travis-ci.org/trustedanalytics/data-acquisition)
+[![Dependency Status](https://www.versioneye.com/user/projects/57236540ba37ce0031fc1c04/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57236540ba37ce0031fc1c04)
 
 # Data Acquisition Service - DAS
 
