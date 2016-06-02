@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>data-acquisition</artifactId>
-    <version>0.5.11</version>
+    <version>0.5.12</version>
     <name>DAS</name>
     <description>Data Acquisition Service</description>
 
@@ -285,7 +285,7 @@
         <dependency>
             <groupId>org.trustedanalytics</groupId>
             <artifactId>cf-client</artifactId>
-            <version>0.4.14</version>
+            <version>0.4.38</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
