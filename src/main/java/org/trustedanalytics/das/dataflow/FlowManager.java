@@ -99,8 +99,10 @@ public class FlowManager {
 
     private void enqueue(BlockingRequestIdQueue queue, Request item) {
         requestStore.put(item);
+        LOGGER.info("Adding item to request store {}", item);
         try {
             queue.offer(item.getId());
+            LOGGER.info("Added item to queue");
         } catch (Exception e) {
             Throwables.propagate(e);
         }

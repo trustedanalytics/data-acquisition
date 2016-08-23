@@ -53,19 +53,27 @@ public class PoolingThreadedService extends AbstractExecutionThreadService {
     @Override
     protected void run() throws Exception {
         while (isRunning()) {
+            LOGGER.info("Heartbeat from {}", serviceName());
             Optional
                     .ofNullable(queue.take())
-                    .map(requestId -> requestStore.get(requestId).get())
-                    .ifPresent(request -> {
-                        try {
-                            LOGGER.info("Prrocessing request: " + request);
-                            handler.accept(request);
-
-                        } catch (Exception e) {
-                            LOGGER.warn("Error processing request: " + request, e);
-                            requestStore.put(request.changeState(ERROR));
+                    .flatMap(requestId -> {
+                        LOGGER.info("Request id: {}", requestId);
+                        final Optional<Request> request = requestStore.get(requestId);
+                        LOGGER.info("Redis id: {}", request);
+                        if (! request.isPresent()) {
+                            LOGGER.warn("Request not found in redis database");
                         }
-                    });
+                        return request;
+                    })
+                    .ifPresent(request -> {
+                            try {
+                                LOGGER.info("Processing request: " + request);
+                                handler.accept(request);
+                            } catch (Exception e) {
+                                LOGGER.warn("Error processing request: " + request, e);
+                                requestStore.put(request.changeState(ERROR));
+                            }
+                        });
         }
     }
 
